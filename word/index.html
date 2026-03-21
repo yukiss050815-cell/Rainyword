@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <!-- 针对移动端优化，禁止缩放，使其更像原生App -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>简约应用</title>
+    <style>
+        /* CSS 变量定义颜色规范，方便后期修改 */
+        :root {
+            --bg-color: #F9FAFB;        /* 整体背景色：极浅灰 */
+            --nav-bg: #FFFFFF;          /* 导航栏背景色：纯白 */
+            --text-main: #111827;       /* 主标题/活跃状态颜色：近纯黑 */
+            --text-muted: #9CA3AF;      /* 未激活状态颜色：中性灰 */
+            --border-color: #F3F4F6;    /* 边框颜色 */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            /* 禁用移动端点击高亮 */
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 顶部内容区域 */
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        /* 切换页面的内容容器 */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 页面标题占位样式 */
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .page-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+
+        /* 底部导航栏 */
+        .bottom-nav {
+            background-color: var(--nav-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 0;
+            /* 适配刘海屏底部的安全距离 */
+            padding-bottom: calc(8px + env(safe-area-inset-bottom));
+            box-shadow: 0 -1px 10px rgba(0, 0, 0, 0.02);
+            flex-shrink: 0;
+        }
+
+        /* 导航栏按键 */
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            width: 25%;
+            color: var(--text-muted);
+            transition: color 0.2s ease;
+        }
+
+        /* 图标样式 */
+        .nav-item svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+            stroke-width: 2;
+            transition: all 0.2s ease;
+        }
+
+        /* 文字样式 */
+        .nav-item span {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* 选中状态 */
+        .nav-item.active {
+            color: var(--text-main);
+        }
+
+        .nav-item.active svg {
+            /* 选中时稍微加粗图标线条，增加质感 */
+            stroke-width: 2.5; 
+            transform: translateY(-2px);
+        }
+
+        /* 淡入动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+/* ================= 新增：组件与子页面系统样式 ================= */
+        /* 列表菜单 (如设置项) */
+        .menu-list { margin-top: 24px; background: #fff; border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden; }
+        .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background 0.2s; font-size: 15px; }
+        .menu-item:last-child { border-bottom: none; }
+        .menu-item:active { background: var(--bg-color); }
+
+        /* 滑出式子页面基础结构 (支持以后无限加子页) */
+        .sub-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 100; display: flex; flex-direction: column; }
+        .sub-page.active { transform: translateX(0); }
+        .sub-page-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #fff; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .back-btn { display: flex; align-items: center; cursor: pointer; color: var(--text-muted); font-size: 15px; }
+        .sub-page-content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 40px; }
+
+        /* 表单控件 */
+        .form-group { background: #fff; padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+        .form-group .note { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4; }
+        .form-group input[type="text"], .form-group input[type="password"], .form-group select { width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px; outline: none; background: var(--bg-color); }
+        .form-group input[type="range"] { width: 100%; margin-top: 4px; accent-color: var(--text-main); }
+        .val-display { color: var(--text-muted); font-weight: normal; float: right; }
+        
+        .action-group { display: flex; gap: 8px; align-items: center; background: transparent; border: none; padding: 0; }
+        .action-group input { flex: 1; }
+        .btn { padding: 10px 16px; background: var(--text-main); color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 500; }
+        .btn-danger { background: #FEE2E2; color: #EF4444; }
+        .btn:active { opacity: 0.8; transform: scale(0.98); }
+/* ===== 档案袋 ===== */
+.portfolio-tabs { display: flex; gap: 16px; margin: 12px 0 16px; }
+.ptab { font-size: 15px; font-weight: 500; color: var(--text-muted); cursor: pointer; padding-bottom: 4px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.ptab.active { color: var(--text-main); border-bottom-color: var(--text-main); }
+.ptab-content { display: none; position: relative; min-height: 60vh; }
+.ptab-content.active { display: block; }
+
+/* 人设卡片 */
+.char-list { display: flex; flex-direction: column; gap: 12px; }
+.char-card { background: #fff; border-radius: 12px; border: 1px solid var(--border-color); padding: 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: background 0.2s; }
+.char-card:active { background: var(--bg-color); }
+.char-avatar { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; background: #E5E7EB; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.char-info { flex: 1; }
+.char-name { font-size: 16px; font-weight: 600; }
+.char-desc { font-size: 13px; color: var(--text-muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+.char-active-badge { font-size: 11px; background: var(--text-main); color: #fff; padding: 2px 8px; border-radius: 20px; }
+
+/* 世界书条目 */
+.wb-list { display: flex; flex-direction: column; gap: 10px; }
+.wb-card { background: #fff; border-radius: 12px; border: 1px solid var(--border-color); padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.wb-card-info { flex: 1; }
+.wb-card-title { font-size: 15px; font-weight: 500; }
+.wb-card-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+.wb-toggle { flex-shrink: 0; }
+
+/* 浮动新建按钮 */
+.fab { position: fixed; right: 24px; bottom: calc(70px + env(safe-area-inset-bottom)); width: 52px; height: 52px; border-radius: 50%; background: var(--text-main); color: #fff; font-size: 24px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; z-index: 10; }
+
+/* 开关 toggle */
+.toggle { position: relative; width: 44px; height: 26px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: #E5E7EB; border-radius: 26px; transition: 0.2s; cursor: pointer; }
+.toggle-slider:before { content: ''; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: 0.2s; }
+.toggle input:checked + .toggle-slider { background: var(--text-main); }
+.toggle input:checked + .toggle-slider:before { transform: translateX(18px); }
+/* ===== 人设详情页 ===== */
+.char-detail-hero { display: flex; flex-direction: column; align-items: center; padding: 32px 16px 24px; width: 100%; }
+.char-detail-avatar { width: 80px; height: 80px; border-radius: 10px; background: #F3F4F6; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; flex-shrink: 0; }
+.char-detail-name { font-size: 22px; font-weight: 700; margin-top: 12px; }
+.char-detail-desc { font-size: 14px; color: var(--text-muted); margin-top: 6px; text-align: center; }
+.avatar-placeholder { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+
+/* 人设卡片头像 */
+.char-avatar { width: 52px; height: 52px; border-radius: 10px; background: #F3F4F6; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+.char-avatar img { width: 100%; height: 100%; object-fit: cover; }
+/* ===== 世界书 ===== */
+.wb-card { background: #fff; border-radius: 12px; border: 1px solid var(--border-color); padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+.wb-card-info { flex: 1; cursor: pointer; }
+.wb-card-title { font-size: 15px; font-weight: 500; }
+.wb-card-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+.wb-drag-handle { cursor: grab; color: var(--text-muted); padding: 4px; flex-shrink: 0; }
+.wb-drag-handle:active { cursor: grabbing; }
+.wb-card.dragging { opacity: 0.4; }
+.wb-card.drag-over { border-color: var(--text-main); }
+
+/* 角色勾选项 */
+.char-checkbox-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg-color); border-radius: 8px; }
+.char-checkbox-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--text-main); flex-shrink: 0; }
+.char-checkbox-item .char-avatar { width: 32px; height: 32px; }
+/* ===== 单词页顶栏 ===== */
+.words-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-top: 8px; }
+.wordbook-selector { display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--border-color); border-radius: 20px; padding: 7px 14px; font-size: 14px; font-weight: 500; cursor: pointer; max-width: 60%; }
+.wordbook-selector span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.active-char-chip { display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--border-color); border-radius: 20px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+.chip-avatar { width: 22px; height: 22px; border-radius: 6px; background: #F3F4F6; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+.chip-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ===== 进度卡片 ===== */
+.progress-card { background: #fff; border-radius: 14px; border: 1px solid var(--border-color); padding: 16px; margin-bottom: 20px; }
+.progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.progress-label { font-size: 14px; font-weight: 500; }
+.progress-fraction { font-size: 14px; color: var(--text-muted); }
+.progress-bar-bg { width: 100%; height: 6px; background: #F3F4F6; border-radius: 6px; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: var(--text-main); border-radius: 6px; transition: width 0.4s ease; }
+.progress-stats { display: flex; justify-content: space-between; margin-top: 12px; font-size: 12px; color: var(--text-muted); }
+.progress-stats b { color: var(--text-main); }
+/* ===== 词书管理 ===== */
+.wb-section-title { font-size: 13px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 10px; text-transform: uppercase; }
+.wordbook-list { display: flex; flex-direction: column; gap: 10px; }
+.wordbook-card { background: #fff; border-radius: 12px; border: 1px solid var(--border-color); padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: border-color 0.2s; }
+.wordbook-card.active-wb { border-color: var(--text-main); }
+.wordbook-card-info { flex: 1; }
+.wordbook-card-name { font-size: 15px; font-weight: 500; }
+.wordbook-card-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+.wordbook-card-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
+.wordbook-card.active-wb .wordbook-card-check { background: var(--text-main); border-color: var(--text-main); }
+.wordbook-card-delete { padding: 4px 8px; color: #EF4444; font-size: 12px; background: #FEE2E2; border: none; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
+
+    </style>
+</head>
+<body>
+
+    <!-- 内容区域 -->
+    <main>
+        <!-- 单词 内容 -->
+        <!-- 单词 内容 -->
+<section id="tab-words" class="tab-content active">
+
+  <!-- 顶栏：词书选择 + 陪学角色 -->
+  <div class="words-topbar">
+    <div class="wordbook-selector" onclick="openSubPage('wordbook-manager')">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+      </svg>
+      <span id="current-wordbook-name">请选择词书</span>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+      </svg>
+    </div>
+    <div class="active-char-chip" onclick="switchTab(event,'portfolio')">
+      <div class="chip-avatar" id="topbar-char-avatar">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#9CA3AF" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <span id="topbar-char-name">未选角色</span>
+    </div>
+  </div>
+
+  <!-- 学习进度条 -->
+  <div class="progress-card" id="progress-card" style="display:none;">
+    <div class="progress-row">
+      <span class="progress-label">今日进度</span>
+      <span class="progress-fraction" id="progress-fraction">0 / 0</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progress-bar-fill" style="width:0%"></div>
+    </div>
+    <div class="progress-stats">
+      <span id="stat-unseen">未学 <b>0</b></span>
+      <span id="stat-learning">学习中 <b>0</b></span>
+      <span id="stat-learned">已学 <b>0</b></span>
+      <span id="stat-review">待复习 <b>0</b></span>
+    </div>
+  </div>
+
+  <!-- 空状态 -->
+  <div id="words-empty" style="text-align:center;margin-top:80px;color:var(--text-muted);font-size:14px;">
+    请先选择一本词书开始学习
+  </div>
+
+  <!-- 开始学习按钮 -->
+  <div id="words-start" style="display:none;margin-top:32px;text-align:center;">
+    <button class="btn" style="padding:14px 40px;font-size:16px;border-radius:14px;" onclick="startStudy()">开始学习</button>
+  </div>
+
+</section>
+
+
+        <!-- 记录 内容 -->
+        <section id="tab-records" class="tab-content">
+            <h1 class="page-title">记录</h1>
+            <p class="page-desc">查看你的学习时长与复习轨迹。</p>
+        </section>
+
+        <!-- 档案袋 内容 -->
+<section id="tab-portfolio" class="tab-content">
+  <h1 class="page-title">档案袋</h1>
+
+  <!-- 人设 / 世界书 切换 -->
+  <div class="portfolio-tabs">
+    <span class="ptab active" onclick="switchPortfolioTab('characters')">人设</span>
+    <span class="ptab" onclick="switchPortfolioTab('worldbook')">世界书</span>
+  </div>
+
+  <!-- 人设列表 -->
+  <div id="ptab-characters" class="ptab-content active">
+    <div id="char-list" class="char-list"></div>
+    <button class="fab" onclick="openSubPage('char-edit'); initCharEdit(null)">＋</button>
+  </div>
+
+  <!-- 世界书列表 -->
+  <div id="ptab-worldbook" class="ptab-content">
+    <div id="wb-list" class="wb-list"></div>
+    <button class="fab" onclick="openSubPage('wb-edit'); initWbEdit(null)">＋</button>
+  </div>
+</section>
+
+
+        <!-- 我 内容 -->
+        <section id="tab-me" class="tab-content">
+            <h1 class="page-title">我</h1>
+            <p class="page-desc">账号设置与偏好管理。</p>
+<!-- 【在此处添加API入口】 -->
+        <div class="menu-list">
+            <div class="menu-item" onclick="openSubPage('api-settings')">
+                <span>API 配置</span>
+                <!-- 向右的箭头图标 -->
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </div>
+        </div>
+        </section>
+
+<!-- 【模块：人设详情子页面】 -->
+<div id="char-detail" class="sub-page">
+  <div class="sub-page-header">
+    <span class="back-btn" onclick="closeSubPage('char-detail')">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" style="margin-right:4px;">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>返回
+    </span>
+    <span class="page-title" style="margin:0;font-size:16px;">人设详情</span>
+    <span style="width:44px;"></span>
+  </div>
+  <div class="sub-page-content">
+    <div class="char-detail-hero">
+      <div class="char-detail-avatar">
+        <img id="detail-avatar-display" src="" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px;display:none;">
+        <div id="detail-avatar-placeholder" class="avatar-placeholder">
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#9CA3AF" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+      </div>
+      <div class="char-detail-name" id="detail-name-display">未命名</div>
+      <div class="char-detail-desc" id="detail-desc-display"></div>
+      <div style="display:flex;gap:10px;margin-top:16px;width:100%;">
+        <button class="btn" style="flex:1" onclick="setActiveChar()">设为陪学角色</button>
+        <button class="btn" style="flex:1;background:#F3F4F6;color:var(--text-main)" onclick="openSubPage('char-edit');initCharEdit(currentCharId)">编辑</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 【模块：人设编辑子页面】 -->
+<div id="char-edit" class="sub-page">
+  <div class="sub-page-header">
+    <span class="back-btn" onclick="closeSubPage('char-edit')">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" style="margin-right:4px;">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>返回
+    </span>
+    <span class="page-title" style="margin:0;font-size:16px;" id="char-edit-title">新建人设</span>
+    <span style="width:44px;"></span>
+  </div>
+  <div class="sub-page-content">
+
+    <!-- 头像上传 -->
+    <div class="form-group" style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+      <div class="char-detail-avatar" onclick="document.getElementById('avatar-upload').click()" style="cursor:pointer;position:relative;">
+        <img id="edit-avatar-preview" src="" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px;display:none;">
+        <div id="edit-avatar-placeholder" class="avatar-placeholder">
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#9CA3AF" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <!-- 悬浮编辑提示 -->
+        <div style="position:absolute;bottom:0;right:0;width:24px;height:24px;background:var(--text-main);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </div>
+      </div>
+      <p class="note" style="margin:0;text-align:center;">点击头像上传图片</p>
+      <input type="file" id="avatar-upload" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
+    </div>
+
+    <div class="form-group">
+      <label>姓名</label>
+      <input type="text" id="edit-char-name" placeholder="角色名称">
+    </div>
+
+    <div class="form-group">
+      <label>简介</label>
+      <input type="text" id="edit-char-desc" placeholder="一句话描述（展示在卡片上）">
+    </div>
+
+    <div class="form-group">
+      <label>系统提示词 (System Prompt)</label>
+      <p class="note">描述角色的性格、说话方式、背景设定等。</p>
+      <textarea id="edit-char-prompt" rows="6" style="width:100%;padding:10px 12px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;outline:none;background:var(--bg-color);resize:vertical;line-height:1.6;" placeholder="例如：你是林晓，一个活泼开朗的大学生，说话喜欢用轻松的语气..."></textarea>
+    </div>
+
+    <div style="display:flex;gap:10px;">
+      <button class="btn" style="flex:1" onclick="saveChar()">保存</button>
+      <button class="btn btn-danger" style="flex:1" onclick="deleteChar()">删除</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- 【模块：世界书编辑子页面】 -->
+<div id="wb-edit" class="sub-page">
+  <div class="sub-page-header">
+    <span class="back-btn" onclick="closeSubPage('wb-edit')">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" style="margin-right:4px;">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>返回
+    </span>
+    <span class="page-title" style="margin:0;font-size:16px;" id="wb-edit-title">新建条目</span>
+    <span style="width:44px;"></span>
+  </div>
+  <div class="sub-page-content">
+
+    <div class="form-group">
+      <label>标题</label>
+      <input type="text" id="edit-wb-title" placeholder="条目标题">
+    </div>
+
+    <div class="form-group">
+      <label>内容</label>
+      <textarea id="edit-wb-content" rows="8" style="width:100%;padding:10px 12px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;outline:none;background:var(--bg-color);resize:vertical;line-height:1.6;" placeholder="填写世界观设定内容..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>作用范围</label>
+      <p class="note">全局：注入所有角色；局部：只注入指定角色</p>
+      <select id="edit-wb-scope" onchange="renderWbCharSelect()">
+        <option value="global">全局</option>
+        <option value="local">局部</option>
+      </select>
+    </div>
+
+    <!-- 局部模式下选择角色 -->
+    <div class="form-group" id="wb-char-select-group" style="display:none;">
+      <label>指定角色</label>
+      <p class="note">选择哪些角色会注入此条目</p>
+      <div id="wb-char-checkboxes" style="display:flex;flex-direction:column;gap:10px;margin-top:4px;"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;">
+      <button class="btn" style="flex:1" onclick="saveWbEntry()">保存</button>
+      <button class="btn btn-danger" style="flex:1" onclick="deleteWbEntry()">删除</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- 【模块：词书管理子页面】 -->
+<div id="wordbook-manager" class="sub-page">
+  <div class="sub-page-header">
+    <span class="back-btn" onclick="closeSubPage('wordbook-manager')">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" style="margin-right:4px;">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>返回
+    </span>
+    <span class="page-title" style="margin:0;font-size:16px;">词书管理</span>
+    <span style="width:44px;"></span>
+  </div>
+  <div class="sub-page-content">
+
+    <!-- 内置词书 -->
+    <div class="wb-section-title">内置词书</div>
+    <div id="builtin-wordbook-list" class="wordbook-list"></div>
+
+    <!-- 我的词书 -->
+    <div class="wb-section-title" style="margin-top:24px;">我的词书</div>
+    <div id="custom-wordbook-list" class="wordbook-list"></div>
+
+    <!-- 导入区域 -->
+    <div class="form-group" style="margin-top:24px;">
+      <label>导入词书 (JSON)</label>
+      <p class="note">JSON格式：{"name":"词书名","words":[{"word":"hello","translation":"你好","phonetic":"/həˈloʊ/","pos":"int.","example":"Hello world."}]}</p>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn" style="flex:1;" onclick="document.getElementById('wb-json-upload').click()">从文件导入</button>
+      </div>
+      <input type="file" id="wb-json-upload" accept=".json" style="display:none;" onchange="importWordbookFromFile(event)">
+    </div>
+
+  </div>
+</div>
+
+
+<!-- 【模块：API配置子页面】 -->
+        <div id="api-settings" class="sub-page">
+            <div class="sub-page-header">
+                <span class="back-btn" onclick="closeSubPage('api-settings')">
+                    <!-- 返回箭头 -->
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" style="margin-right:4px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg> 
+                    返回
+                </span>
+                <span class="page-title" style="margin:0; font-size:16px;">API 配置</span>
+                <span style="width: 44px;"></span> <!-- 占位符，用于居中标题 -->
+            </div>
+            
+            <div class="sub-page-content">
+                <div class="form-group">
+                    <label>预设管理</label>
+                    <select id="preset-select" onchange="loadPreset()">
+                        <option value="">-- 自定义新预设 --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>网站 (Base URL)</label>
+                    <input type="text" id="api-url" placeholder="例如: https://api.openai.com/v1">
+                </div>
+                
+                <div class="form-group">
+                    <label>密钥 (API Key)</label>
+                    <input type="password" id="api-key" placeholder="sk-...">
+                </div>
+
+                <div class="form-group">
+                    <label>Temperature: <span id="val-temp" class="val-display">0.7</span></label>
+                    <p class="note">范围: 0.0 - 2.0 (控制随机性。值越大回答越发散，值越小越严谨)</p>
+                    <input type="range" id="api-temp" min="0" max="2" step="0.1" value="0.7" oninput="document.getElementById('val-temp').innerText=this.value">
+                </div>
+
+                <div class="form-group">
+                    <label>Top P: <span id="val-topp" class="val-display">1.0</span></label>
+                    <p class="note">范围: 0.0 - 1.0 (核采样概率。建议与Temperature二选一调整)</p>
+                    <input type="range" id="api-topp" min="0" max="1" step="0.05" value="1.0" oninput="document.getElementById('val-topp').innerText=this.value">
+                </div>
+
+                <div class="form-group">
+                    <label>Presence Penalty: <span id="val-pres" class="val-display">0.0</span></label>
+                    <p class="note">范围: -2.0 - 2.0 (存在惩罚。正值鼓励谈论新话题)</p>
+                    <input type="range" id="api-pres" min="-2" max="2" step="0.1" value="0" oninput="document.getElementById('val-pres').innerText=this.value">
+                </div>
+
+                <div class="form-group">
+                    <label>Frequency Penalty: <span id="val-freq" class="val-display">0.0</span></label>
+                    <p class="note">范围: -2.0 - 2.0 (频率惩罚。正值减少重复使用相同字词)</p>
+                    <input type="range" id="api-freq" min="-2" max="2" step="0.1" value="0" oninput="document.getElementById('val-freq').innerText=this.value">
+                </div>
+
+                <div class="form-group action-group">
+                    <input type="text" id="preset-name" placeholder="为预设起个名字...">
+                    <button class="btn" onclick="savePreset()">保存</button>
+                    <button class="btn btn-danger" onclick="deletePreset()">删除</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 底部导航栏 -->
+    <nav class="bottom-nav">
+        <!-- 单词 Tab -->
+        <div class="nav-item active" onclick="switchTab(event, 'words')">
+            <!-- 书本 SVG 图标 -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+            </svg>
+            <span>单词</span>
+        </div>
+
+        <!-- 记录 Tab -->
+        <div class="nav-item" onclick="switchTab(event, 'records')">
+            <!-- 列表/数据 SVG 图标 -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            <span>记录</span>
+        </div>
+
+        <!-- 档案袋 Tab -->
+        <div class="nav-item" onclick="switchTab(event, 'portfolio')">
+            <!-- 文件夹 SVG 图标 -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span>档案袋</span>
+        </div>
+
+        <!-- 我 Tab -->
+        <div class="nav-item" onclick="switchTab(event, 'me')">
+            <!-- 用户 SVG 图标 -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span>我</span>
+        </div>
+    </nav>
+
+    <!-- 交互脚本 -->
+    <script>
+        function switchTab(event, tabId) {
+            // 1. 隐藏所有的内容区域
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // 2. 移除所有导航项的 active 类
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // 3. 显示点击对应的内容区域
+            document.getElementById('tab-' + tabId).classList.add('active');
+
+            // 4. 将点击的导航项设为激活状态 (加黑、上浮)
+            event.currentTarget.classList.add('active');
+        }
+
+/* ================= 新增：子页面引擎与 API 逻辑 ================= */
+        // 通用子页面开关
+        function openSubPage(pageId) {
+            document.getElementById(pageId).classList.add('active');
+        }
+        function closeSubPage(pageId) {
+            document.getElementById(pageId).classList.remove('active');
+        }
+
+        // --- API 预设存储与管理模块 ---
+        // 从浏览器本地缓存加载预设，防止刷新丢失
+        let apiPresets = JSON.parse(localStorage.getItem('myAppApiPresets')) || {};
+
+// ============ 数据层初始化 ============
+const DB = {
+  get(key) {
+    try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
+  },
+  set(key, val) {
+    localStorage.setItem(key, JSON.stringify(val));
+  }
+};
+
+// 首次运行时初始化默认数据
+function initDB() {
+  if (!DB.get('wordbooks'))        DB.set('wordbooks', []);
+  if (!DB.get('wordProgress'))     DB.set('wordProgress', {});
+  if (!DB.get('characters'))       DB.set('characters', []);
+  if (!DB.get('worldBookEntries')) DB.set('worldBookEntries', []);
+  if (!DB.get('records'))          DB.set('records', []);
+  if (!DB.get('appSettings')) {
+    DB.set('appSettings', {
+      activeCharId: null,
+      activeWordbookId: null,
+      aiTriggerInterval: 5,
+      aiMode: 'dialogue',
+      injectOrder: ['system', 'character', 'memory', 'worldbook']
+    });
+  }
+}
+
+initDB();
+// ============ 数据层初始化 END ============
+// ============ 档案袋：人设模块 ============
+let currentCharId = null;
+let currentEditAvatar = null; // 存压缩后的base64
+
+function switchPortfolioTab(tab) {
+  document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.ptab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('ptab-' + tab).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// 图片压缩：限制最长边400px，质量0.7
+function compressImage(file, callback) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const maxSize = 400;
+      let w = img.width, h = img.height;
+      if (w > h && w > maxSize) { h = h * maxSize / w; w = maxSize; }
+      else if (h > maxSize) { w = w * maxSize / h; h = maxSize; }
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', 0.7));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleAvatarUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  compressImage(file, function(base64) {
+    currentEditAvatar = base64;
+    const preview = document.getElementById('edit-avatar-preview');
+    const placeholder = document.getElementById('edit-avatar-placeholder');
+    preview.src = base64;
+    preview.style.display = 'block';
+    placeholder.style.display = 'none';
+  });
+}
+
+function renderCharList() {
+  const chars = DB.get('characters') || [];
+  const settings = DB.get('appSettings');
+  const list = document.getElementById('char-list');
+  if (chars.length === 0) {
+    list.innerHTML = '<p style="color:var(--text-muted);font-size:14px;text-align:center;margin-top:40px;">还没有人设，点右下角 + 新建</p>';
+    return;
+  }
+  list.innerHTML = chars.map(c => `
+    <div class="char-card" onclick="openCharDetail('${c.id}')">
+      <div class="char-avatar">
+        ${c.avatar
+          ? `<img src="${c.avatar}" alt="${c.name}">`
+          : `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#9CA3AF" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
+        }
+      </div>
+      <div class="char-info">
+        <div class="char-name">${c.name || '未命名'}</div>
+        <div class="char-desc">${c.description || '暂无简介'}</div>
+      </div>
+      ${settings.activeCharId === c.id ? '<span class="char-active-badge">陪学中</span>' : ''}
+    </div>
+  `).join('');
+}
+
+function openCharDetail(id) {
+  const chars = DB.get('characters') || [];
+  const c = chars.find(x => x.id === id);
+  if (!c) return;
+  currentCharId = id;
+
+  const imgEl = document.getElementById('detail-avatar-display');
+  const placeholder = document.getElementById('detail-avatar-placeholder');
+  if (c.avatar) {
+    imgEl.src = c.avatar;
+    imgEl.style.display = 'block';
+    placeholder.style.display = 'none';
+  } else {
+    imgEl.style.display = 'none';
+    placeholder.style.display = 'flex';
+  }
+
+  document.getElementById('detail-name-display').textContent = c.name || '未命名';
+  document.getElementById('detail-desc-display').textContent = c.description || '';
+  openSubPage('char-detail');
+}
+
+function setActiveChar() {
+  if (!currentCharId) return;
+  const settings = DB.get('appSettings');
+  settings.activeCharId = currentCharId;
+  DB.set('appSettings', settings);
+  renderCharList();
+  closeSubPage('char-detail');
+  alert('已设为陪学角色！');
+}
+
+function initCharEdit(id) {
+  currentEditAvatar = null;
+  const preview = document.getElementById('edit-avatar-preview');
+  const placeholder = document.getElementById('edit-avatar-placeholder');
+  document.getElementById('avatar-upload').value = '';
+
+  if (id) {
+    const chars = DB.get('characters') || [];
+    const c = chars.find(x => x.id === id);
+    if (!c) return;
+    document.getElementById('char-edit-title').textContent = '编辑人设';
+    document.getElementById('edit-char-name').value = c.name || '';
+    document.getElementById('edit-char-desc').value = c.description || '';
+    document.getElementById('edit-char-prompt').value = c.systemPrompt || '';
+    if (c.avatar) {
+      currentEditAvatar = c.avatar;
+      preview.src = c.avatar;
+      preview.style.display = 'block';
+      placeholder.style.display = 'none';
+    } else {
+      preview.style.display = 'none';
+      placeholder.style.display = 'flex';
+    }
+  } else {
+    document.getElementById('char-edit-title').textContent = '新建人设';
+    document.getElementById('edit-char-name').value = '';
+    document.getElementById('edit-char-desc').value = '';
+    document.getElementById('edit-char-prompt').value = '';
+    preview.style.display = 'none';
+    placeholder.style.display = 'flex';
+  }
+}
+
+function saveChar() {
+  const name = document.getElementById('edit-char-name').value.trim();
+  if (!name) return alert('请输入角色姓名');
+  const chars = DB.get('characters') || [];
+  const isEdit = document.getElementById('char-edit-title').textContent === '编辑人设';
+
+  if (isEdit && currentCharId) {
+    const idx = chars.findIndex(x => x.id === currentCharId);
+    if (idx !== -1) {
+      chars[idx].name = name;
+      chars[idx].avatar = currentEditAvatar || chars[idx].avatar || null;
+      chars[idx].description = document.getElementById('edit-char-desc').value.trim();
+      chars[idx].systemPrompt = document.getElementById('edit-char-prompt').value.trim();
+    }
+  } else {
+    chars.push({
+      id: 'char_' + Date.now(),
+      name,
+      avatar: currentEditAvatar || null,
+      description: document.getElementById('edit-char-desc').value.trim(),
+      systemPrompt: document.getElementById('edit-char-prompt').value.trim(),
+      worldBooks: [],
+      createdAt: Date.now()
+    });
+  }
+
+  DB.set('characters', chars);
+  renderCharList();
+  closeSubPage('char-edit');
+  closeSubPage('char-detail');
+  alert('保存成功！');
+}
+
+function deleteChar() {
+  if (!currentCharId) return;
+  if (!confirm('确定删除这个人设？')) return;
+  let chars = DB.get('characters') || [];
+  chars = chars.filter(x => x.id !== currentCharId);
+  DB.set('characters', chars);
+  const settings = DB.get('appSettings');
+  if (settings.activeCharId === currentCharId) {
+    settings.activeCharId = null;
+    DB.set('appSettings', settings);
+  }
+  currentCharId = null;
+  renderCharList();
+  closeSubPage('char-edit');
+  closeSubPage('char-detail');
+}
+
+const origSwitchTab = switchTab;
+switchTab = function(event, tabId) {
+  origSwitchTab(event, tabId);
+  if (tabId === 'portfolio') renderCharList();
+};
+// ============ 档案袋：人设模块 END ============
+// ============ 档案袋：世界书模块 ============
+let currentWbId = null;
+
+function renderWbList() {
+  const entries = DB.get('worldBookEntries') || [];
+  const list = document.getElementById('wb-list');
+  if (entries.length === 0) {
+    list.innerHTML = '<p style="color:var(--text-muted);font-size:14px;text-align:center;margin-top:40px;">还没有条目，点右下角 + 新建</p>';
+    return;
+  }
+  list.innerHTML = entries.map((e, idx) => `
+   <div class="wb-card" id="wbcard-${e.id}"
+  draggable="true"
+  ondragstart="wbDragStart(event,'${e.id}')"
+  ondragover="wbDragOver(event,'${e.id}')"
+  ondrop="wbDrop(event,'${e.id}')"
+  ondragend="wbDragEnd()"
+  ontouchstart="wbTouchStart(event,'${e.id}')"
+  ontouchmove="wbTouchMove(event)"
+  ontouchend="wbTouchEnd(event)">
+
+      <!-- 拖拽把手 -->
+      <div class="wb-drag-handle">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/>
+        </svg>
+      </div>
+      <!-- 条目信息（点击编辑） -->
+      <div class="wb-card-info" onclick="openWbEdit('${e.id}')">
+        <div class="wb-card-title">${e.title || '无标题'}</div>
+        <div class="wb-card-meta">${e.scope === 'global' ? '全局' : '局部'} · ${(e.content || '').slice(0, 30)}${e.content && e.content.length > 30 ? '...' : ''}</div>
+      </div>
+      <!-- 启用开关 -->
+      <label class="toggle wb-toggle">
+        <input type="checkbox" ${e.enabled ? 'checked' : ''} onchange="toggleWbEntry('${e.id}', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  `).join('');
+}
+
+function toggleWbEntry(id, enabled) {
+  const entries = DB.get('worldBookEntries') || [];
+  const idx = entries.findIndex(x => x.id === id);
+  if (idx !== -1) { entries[idx].enabled = enabled; DB.set('worldBookEntries', entries); }
+}
+
+function openWbEdit(id) {
+  currentWbId = id;
+  const entries = DB.get('worldBookEntries') || [];
+  const e = entries.find(x => x.id === id);
+  if (!e) return;
+  document.getElementById('wb-edit-title').textContent = '编辑条目';
+  document.getElementById('edit-wb-title').value = e.title || '';
+  document.getElementById('edit-wb-content').value = e.content || '';
+  document.getElementById('edit-wb-scope').value = e.scope || 'global';
+  renderWbCharSelect();
+  // 勾选已绑定的角色
+  setTimeout(() => {
+    (e.attachedChars || []).forEach(cid => {
+      const cb = document.getElementById('wbcc-' + cid);
+      if (cb) cb.checked = true;
+    });
+  }, 50);
+  openSubPage('wb-edit');
+}
+
+function initWbEdit(id) {
+  currentWbId = null;
+  document.getElementById('wb-edit-title').textContent = '新建条目';
+  document.getElementById('edit-wb-title').value = '';
+  document.getElementById('edit-wb-content').value = '';
+  document.getElementById('edit-wb-scope').value = 'global';
+  renderWbCharSelect();
+}
+
+function renderWbCharSelect() {
+  const scope = document.getElementById('edit-wb-scope').value;
+  const group = document.getElementById('wb-char-select-group');
+  const box = document.getElementById('wb-char-checkboxes');
+  if (scope === 'local') {
+    group.style.display = 'block';
+    const chars = DB.get('characters') || [];
+    if (chars.length === 0) {
+      box.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">还没有人设，请先创建角色</p>';
+      return;
+    }
+    box.innerHTML = chars.map(c => `
+      <label class="char-checkbox-item">
+        <input type="checkbox" id="wbcc-${c.id}" value="${c.id}">
+        <div class="char-avatar">
+          ${c.avatar
+            ? `<img src="${c.avatar}" alt="${c.name}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`
+            : `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#9CA3AF" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
+          }
+        </div>
+        <span style="font-size:14px;">${c.name}</span>
+      </label>
+    `).join('');
+  } else {
+    group.style.display = 'none';
+  }
+}
+
+function saveWbEntry() {
+  const title = document.getElementById('edit-wb-title').value.trim();
+  if (!title) return alert('请输入标题');
+  const scope = document.getElementById('edit-wb-scope').value;
+  let attachedChars = [];
+  if (scope === 'local') {
+    document.querySelectorAll('#wb-char-checkboxes input[type="checkbox"]:checked')
+      .forEach(cb => attachedChars.push(cb.value));
+  }
+  const entries = DB.get('worldBookEntries') || [];
+  if (currentWbId) {
+    const idx = entries.findIndex(x => x.id === currentWbId);
+    if (idx !== -1) {
+      entries[idx].title = title;
+      entries[idx].content = document.getElementById('edit-wb-content').value.trim();
+      entries[idx].scope = scope;
+      entries[idx].attachedChars = attachedChars;
+    }
+  } else {
+    entries.push({
+      id: 'wbe_' + Date.now(),
+      title,
+      content: document.getElementById('edit-wb-content').value.trim(),
+      scope,
+      attachedChars,
+      enabled: true,
+      order: entries.length
+    });
+  }
+  DB.set('worldBookEntries', entries);
+  renderWbList();
+  closeSubPage('wb-edit');
+}
+
+function deleteWbEntry() {
+  if (!currentWbId) return;
+  if (!confirm('确定删除此条目？')) return;
+  let entries = DB.get('worldBookEntries') || [];
+  entries = entries.filter(x => x.id !== currentWbId);
+  DB.set('worldBookEntries', entries);
+  currentWbId = null;
+  renderWbList();
+  closeSubPage('wb-edit');
+}
+
+// 拖拽排序（touch + mouse 双支持）
+let wbDragSrcId = null;
+let wbTouchItem = null;
+let wbClone = null;
+let wbTouchStartY = 0;
+
+function wbDragStart(e, id) {
+  wbDragSrcId = id;
+  e.currentTarget.classList.add('dragging');
+}
+function wbDragOver(e, id) {
+  e.preventDefault();
+  document.querySelectorAll('.wb-card').forEach(c => c.classList.remove('drag-over'));
+  if (id !== wbDragSrcId) document.getElementById('wbcard-' + id).classList.add('drag-over');
+}
+function wbDrop(e, targetId) {
+  e.preventDefault();
+  if (wbDragSrcId === targetId) return;
+  wbReorder(wbDragSrcId, targetId);
+}
+function wbDragEnd() {
+  document.querySelectorAll('.wb-card').forEach(c => {
+    c.classList.remove('dragging');
+    c.classList.remove('drag-over');
+  });
+}
+
+// touch拖拽
+function wbTouchStart(e, id) {
+  wbDragSrcId = id;
+  wbTouchItem = document.getElementById('wbcard-' + id);
+  wbTouchStartY = e.touches[0].clientY;
+
+  // 创建跟手clone
+  wbClone = wbTouchItem.cloneNode(true);
+  wbClone.style.cssText = `
+    position: fixed;
+    left: ${wbTouchItem.getBoundingClientRect().left}px;
+    top: ${wbTouchItem.getBoundingClientRect().top}px;
+    width: ${wbTouchItem.offsetWidth}px;
+    opacity: 0.9;
+    z-index: 9999;
+    pointer-events: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    transition: none;
+  `;
+  document.body.appendChild(wbClone);
+  wbTouchItem.style.opacity = '0.3';
+  e.preventDefault();
+}
+
+function wbTouchMove(e) {
+  if (!wbClone) return;
+  e.preventDefault();
+  const touch = e.touches[0];
+  const dy = touch.clientY - wbTouchStartY;
+  const rect = wbTouchItem.getBoundingClientRect();
+  wbClone.style.top = (rect.top + dy) + 'px';
+
+  // 找到当前touch位置下的目标卡片
+  document.querySelectorAll('.wb-card').forEach(c => c.classList.remove('drag-over'));
+  const els = document.elementsFromPoint(touch.clientX, touch.clientY);
+  const target = els.find(el => el.classList.contains('wb-card') && el.id !== 'wbcard-' + wbDragSrcId);
+  if (target) target.classList.add('drag-over');
+}
+
+function wbTouchEnd(e) {
+  if (!wbClone) return;
+  const touch = e.changedTouches[0];
+  const els = document.elementsFromPoint(touch.clientX, touch.clientY);
+  const target = els.find(el => el.classList.contains('wb-card') && el.id !== 'wbcard-' + wbDragSrcId);
+
+  if (target) {
+    const targetId = target.id.replace('wbcard-', '');
+    wbReorder(wbDragSrcId, targetId);
+  } else {
+    // 没有目标，恢复原样
+    wbTouchItem.style.opacity = '1';
+    document.querySelectorAll('.wb-card').forEach(c => c.classList.remove('drag-over'));
+  }
+
+  wbClone.remove();
+  wbClone = null;
+  wbTouchItem = null;
+  wbDragSrcId = null;
+}
+
+function wbReorder(srcId, targetId) {
+  let entries = DB.get('worldBookEntries') || [];
+  const srcIdx = entries.findIndex(x => x.id === srcId);
+  const tgtIdx = entries.findIndex(x => x.id === targetId);
+  const [moved] = entries.splice(srcIdx, 1);
+  entries.splice(tgtIdx, 0, moved);
+  entries.forEach((e, i) => e.order = i);
+  DB.set('worldBookEntries', entries);
+  renderWbList();
+}
+
+// 切换到档案袋时也刷新世界书
+const _origSwitchTab = switchTab;
+switchTab = function(event, tabId) {
+  _origSwitchTab(event, tabId);
+  if (tabId === 'portfolio') { renderCharList(); renderWbList(); }
+};
+// ============ 档案袋：世界书模块 END ============
+// ============ 单词页：初始化 ============
+function initWordsTab() {
+  const settings = DB.get('appSettings');
+
+  // 更新顶栏角色显示
+  const chars = DB.get('characters') || [];
+  const activeChar = chars.find(c => c.id === settings.activeCharId);
+  const chipName = document.getElementById('topbar-char-name');
+  const chipAvatar = document.getElementById('topbar-char-avatar');
+  if (activeChar) {
+    chipName.textContent = activeChar.name;
+    chipAvatar.innerHTML = activeChar.avatar
+      ? `<img src="${activeChar.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">`
+      : `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#9CA3AF" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+  } else {
+    chipName.textContent = '未选角色';
+    chipAvatar.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#9CA3AF" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+  }
+
+  // 更新词书显示
+  const wordbooks = DB.get('wordbooks') || [];
+  const activeWb = wordbooks.find(w => w.id === settings.activeWordbookId);
+  document.getElementById('current-wordbook-name').textContent = activeWb ? activeWb.name : '请选择词书';
+
+  if (!activeWb) {
+    document.getElementById('words-empty').style.display = 'block';
+    document.getElementById('progress-card').style.display = 'none';
+    document.getElementById('words-start').style.display = 'none';
+    return;
+  }
+
+  // 统计进度
+  const progress = DB.get('wordProgress') || {};
+  const words = activeWb.words || [];
+  let unseen = 0, learning = 0, learned = 0, review = 0;
+  const now = Date.now();
+  words.forEach(w => {
+    const p = progress[w.id];
+    if (!p || p.status === 'unseen') unseen++;
+    else if (p.status === 'learning') learning++;
+    else if (p.status === 'learned') {
+      learned++;
+      if (p.nextReview && p.nextReview <= now) review++;
+    }
+  });
+
+  const total = words.length;
+  const done = learned;
+  document.getElementById('progress-fraction').textContent = `${done} / ${total}`;
+  document.getElementById('progress-bar-fill').style.width = total > 0 ? (done / total * 100) + '%' : '0%';
+  document.getElementById('stat-unseen').innerHTML = `未学 <b>${unseen}</b>`;
+  document.getElementById('stat-learning').innerHTML = `学习中 <b>${learning}</b>`;
+  document.getElementById('stat-learned').innerHTML = `已学 <b>${learned}</b>`;
+  document.getElementById('stat-review').innerHTML = `待复习 <b>${review}</b>`;
+
+  document.getElementById('words-empty').style.display = 'none';
+  document.getElementById('progress-card').style.display = 'block';
+  document.getElementById('words-start').style.display = 'block';
+}
+
+// 切换到单词tab时刷新
+const __origSwitchTab = switchTab;
+switchTab = function(event, tabId) {
+  __origSwitchTab(event, tabId);
+  if (tabId === 'words') initWordsTab();
+};
+// ============ 单词页：初始化 END ============
+
+
+        function renderPresetList() {
+            const select = document.getElementById('preset-select');
+            select.innerHTML = '<option value="">-- 自定义新预设 --</option>';
+            for (let name in apiPresets) {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                select.appendChild(opt);
+            }
+        }
+
+        function loadPreset() {
+            const name = document.getElementById('preset-select').value;
+            if (!name) return; // 如果选了自定义，保持当前输入框不变
+            
+            const p = apiPresets[name];
+            document.getElementById('api-url').value = p.url || '';
+            document.getElementById('api-key').value = p.key || '';
+            document.getElementById('api-temp').value = p.temp || 0.7;
+            document.getElementById('api-topp').value = p.topp || 1.0;
+            document.getElementById('api-pres').value = p.pres || 0.0;
+            document.getElementById('api-freq').value = p.freq || 0.0;
+            
+            // 更新右侧显示的数字
+            document.getElementById('val-temp').innerText = p.temp || 0.7;
+            document.getElementById('val-topp').innerText = p.topp || 1.0;
+            document.getElementById('val-pres').innerText = p.pres || 0.0;
+            document.getElementById('val-freq').innerText = p.freq || 0.0;
+            
+            // 将名称填入下方输入框方便覆盖保存
+            document.getElementById('preset-name').value = name;
+        }
+
+        function savePreset() {
+            const name = document.getElementById('preset-name').value.trim();
+            if (!name) return alert('请在下方输入预设名称');
+            
+            apiPresets[name] = {
+                url: document.getElementById('api-url').value.trim(),
+                key: document.getElementById('api-key').value.trim(),
+                temp: document.getElementById('api-temp').value,
+                topp: document.getElementById('api-topp').value,
+                pres: document.getElementById('api-pres').value,
+                freq: document.getElementById('api-freq').value
+            };
+            
+            localStorage.setItem('myAppApiPresets', JSON.stringify(apiPresets));
+            renderPresetList();
+            document.getElementById('preset-select').value = name;
+            alert('保存成功！');
+        }
+
+        function deletePreset() {
+            const name = document.getElementById('preset-select').value;
+            if (!name || !apiPresets[name]) return alert('请先在上方选择一个已保存的预设');
+            
+            delete apiPresets[name];
+            localStorage.setItem('myAppApiPresets', JSON.stringify(apiPresets));
+            renderPresetList();
+            document.getElementById('preset-name').value = '';
+            alert('删除成功！');
+        }
+
+        // 页面初始化时渲染预设列表
+        renderPresetList();
+    </script>
+</body>
+</html>
