@@ -375,13 +375,27 @@
 .dot-learning { background: #FBBF24; }
 .dot-learned { background: #34D399; }
 /* ===== 背词页面 ===== */
-/* ===== 背词页面 ===== */
+
+/* 背词页整体布局容器 */
+#study-page .sub-page-content {
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 0;
+  flex: 1;
+  gap: 0;
+}
+
+/* 单词卡片 */
 .study-card {
   background: #fff;
   border-radius: 20px;
   border: 1px solid var(--border-color);
   padding: 32px 24px;
-  min-height: 240px;
+  width: 100%;
+  height: 280px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -389,16 +403,209 @@
   text-align: center;
   position: relative;
   box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-  /* 单词卡片渐出动画 */
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* 单词卡片渐出动画 */
 @keyframes cardFadeOut {
   from { opacity: 1; transform: scale(1); }
   to { opacity: 0; transform: scale(0.95); }
 }
-
 .study-card.card-fading-out {
   animation: cardFadeOut 0.25s ease forwards;
   pointer-events: none;
 }
+
+.study-card:active { transform: scale(0.99); }
+
+.study-word {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--text-main);
+}
+.study-phonetic {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+}
+.study-pos {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-style: italic;
+}
+.study-divider {
+  width: 40px;
+  height: 2px;
+  background: var(--border-color);
+  margin: 16px auto;
+  border-radius: 2px;
+}
+.study-translation {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-main);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.3s ease;
+}
+.study-card.card-revealed .study-translation {
+  opacity: 1;
+  transform: translateY(0);
+}
+.study-example {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-top: 8px;
+  font-style: italic;
+  max-width: 280px;
+  opacity: 0;
+  transition: opacity 0.3s ease 0.1s;
+}
+.study-card.card-revealed .study-example {
+  opacity: 1;
+}
+
+/* 点击翻转提示 */
+.study-tap-hint {
+  position: absolute;
+  bottom: 16px;
+  font-size: 12px;
+  color: #D1D5DB;
+  letter-spacing: 1px;
+  transition: opacity 0.3s;
+}
+.study-card.card-revealed .study-tap-hint { opacity: 0; }
+
+/* 会/不会按钮 */
+.study-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 20px;
+  width: 100%;
+  flex-shrink: 0;
+}
+.study-btn {
+  flex: 1;
+  padding: 18px;
+  border: none;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.study-btn:active { transform: scale(0.96); }
+.study-btn-no {
+  background: var(--danger-light);
+  color: var(--danger);
+  border: 1.5px solid #E0D0D2;
+}
+.study-btn-yes {
+  background: var(--success-light);
+  color: var(--success);
+  border: 1.5px solid #CEDBD6;
+}
+
+/* ===== 选择题 ===== */
+.study-quiz-area {
+  width: 100%;
+  margin-top: 20px;
+  flex-shrink: 0;
+}
+
+.quiz-question {
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  padding: 0 0 16px;
+  color: var(--text-main);
+}
+.quiz-options-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+.quiz-option {
+  padding: 14px 18px;
+  background: #fff;
+  border: 1.5px solid var(--border-color);
+  border-radius: 14px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  font-weight: 500;
+  color: var(--text-main);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.quiz-option:active { background: var(--bg-color); transform: scale(0.98); }
+.quiz-option.correct {
+  background: var(--success-light);
+  border-color: var(--success);
+  color: var(--success);
+  box-shadow: 0 0 0 2px rgba(130,148,144,0.15);
+}
+.quiz-option.wrong {
+  background: var(--danger-light);
+  border-color: var(--danger);
+  color: var(--danger);
+  box-shadow: 0 0 0 2px rgba(158,134,137,0.15);
+}
+
+/* 背词页顶栏 */
+.study-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #fff;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.study-topbar-back {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 15px;
+  gap: 4px;
+}
+.study-topbar-center {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.study-topbar-right {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 3px 10px;
+  background: var(--bg-color);
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+}
+
+/* 进度条 */
+.study-progress-track {
+  height: 3px;
+  background: #F3F4F6;
+}
+.study-progress-fill {
+  height: 100%;
+  background: var(--text-main);
+  transition: width 0.4s ease;
+  border-radius: 0 3px 3px 0;
 }
 .study-card:active { transform: scale(0.99); }
 .study-word {
@@ -2220,7 +2427,7 @@ body.theme-glass .chat-messages {
     <div class="study-progress-fill" id="study-progress-bar" style="width:0%"></div>
   </div>
 
-  <div class="sub-page-content" style="padding:24px 16px;display:flex;flex-direction:column;gap:20px;align-items:center;justify-content:center;min-height:0;flex:1;">
+  <div class="sub-page-content" style="padding:24px 16px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:0;flex:1;gap:0;">
 
     <!-- 单词卡片 -->
     <div class="study-card" id="study-card" onclick="tapStudyCard()">
@@ -2234,7 +2441,7 @@ body.theme-glass .chat-messages {
     </div>
 
     <!-- 会/不会 按钮（新学模式） -->
-    <div id="study-btns-know" class="study-actions" style="width:100%;">
+    <div id="study-btns-know" class="study-actions" style="display:none;">
       <button class="study-btn study-btn-no" onclick="answerWord(false)">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -2249,13 +2456,13 @@ body.theme-glass .chat-messages {
       </button>
     </div>
 
-    <!-- 选择题（练习模式） -->
-    <div id="study-btns-quiz" style="display:none;width:100%;">
+    <!-- 选择题区域（练习模式） -->
+    <div id="study-btns-quiz" class="study-quiz-area" style="display:none;">
       <div class="quiz-question" id="quiz-question"></div>
       <div class="quiz-options-wrap" id="quiz-options"></div>
     </div>
 
-  </div>
+</div>
 </div>
 
 <!-- 【模块：词库展示子页面】 -->
@@ -4719,15 +4926,17 @@ function showQuiz(w, isReview) {
   }
   options = options.sort(() => Math.random() - 0.5);
 
-  document.getElementById('study-word').textContent = w.word;
-  document.getElementById('study-phonetic').textContent = w.phonetic || '';
-  document.getElementById('study-pos').textContent = w.pos || '';
-  document.getElementById('study-translation').textContent = w.translation || '';
-  document.getElementById('study-example').textContent = '';
-
   const dots = studyWordProgress[w.id] || 0;
   document.getElementById('study-mode-label').textContent = `练习 ${renderDotsText(dots)}`;
-  document.getElementById('quiz-question').innerHTML = question + '<div style="margin-top:8px;">' + renderDotsHTML(dots) + '</div>';
+
+  // 隐藏卡片，显示选择题区域
+  document.getElementById('study-card').style.display = 'none';
+  document.getElementById('study-btns-know').style.display = 'none';
+
+  document.getElementById('quiz-question').innerHTML = `
+    <div style="margin-bottom:4px;">${question}</div>
+    <div style="margin-top:8px;">${renderDotsHTML(dots)}</div>
+  `;
 
   document.getElementById('quiz-options').innerHTML = options.map(o => `
     <button class="quiz-option" data-correct="${o.correct}" onclick="answerQuiz(this, ${o.correct}, '${w.id}', ${isReview})">
@@ -4735,9 +4944,10 @@ function showQuiz(w, isReview) {
     </button>
   `).join('');
 
-  document.getElementById('study-btns-know').style.display = 'none';
-  document.getElementById('study-btns-quiz').style.display = 'flex';
-  document.getElementById('study-card').style.display = 'none';
+  const quizEl = document.getElementById('study-btns-quiz');
+  quizEl.style.display = 'block';
+  quizEl.style.opacity = '1';
+  quizEl.style.transition = 'none';
 }
 
 function answerQuiz(btn, correct, wordId, isReview) {
