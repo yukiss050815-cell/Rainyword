@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <!-- 针对移动端优化，禁止缩放，使其更像原生App -->
-   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Rainy">
@@ -48,7 +48,6 @@
     overflow: hidden;
     letter-spacing: 0.3px;
     -webkit-font-smoothing: antialiased;
-padding-top: env(safe-area-inset-top);
 }
 
         /* 顶部内容区域 */
@@ -390,7 +389,16 @@ padding-top: env(safe-area-inset-top);
   text-align: center;
   position: relative;
   box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-  transition: transform 0.2s;
+  /* 单词卡片渐出动画 */
+@keyframes cardFadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.95); }
+}
+
+.study-card.card-fading-out {
+  animation: cardFadeOut 0.25s ease forwards;
+  pointer-events: none;
+}
 }
 .study-card:active { transform: scale(0.99); }
 .study-word {
@@ -488,37 +496,33 @@ padding-top: env(safe-area-inset-top);
   border: 1.5px solid #CEDBD6;
 }
 
-/* 选择题 *//* 选择题 —— 上方大单词 + 下方一行两个选项 */
+/* 选择题 */
 .quiz-question {
-  font-size: 32px;
+  font-size: 26px;
   font-weight: 700;
   text-align: center;
-  padding: 20px 0 24px;
+  padding: 8px 0 16px;
   color: var(--text-main);
-  letter-spacing: 0.5px;
 }
 .quiz-options-wrap {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
   width: 100%;
 }
 .quiz-option {
-  padding: 16px 10px;
-  background: var(--card-bg);
+  padding: 14px 18px;
+  background: #fff;
   border: 1.5px solid var(--border-color);
   border-radius: 14px;
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
   transition: all 0.2s;
   text-align: center;
   font-weight: 500;
-  color: var(--text-main);
-  line-height: 1.4;
-  word-break: break-word;
   box-shadow: 0 1px 4px rgba(0,0,0,0.03);
 }
-.quiz-option:active { background: var(--bg-color); transform: scale(0.97); }
+.quiz-option:active { background: var(--bg-color); transform: scale(0.98); }
 .quiz-option.correct {
   background: var(--success-light);
   border-color: var(--success);
@@ -531,6 +535,7 @@ padding-top: env(safe-area-inset-top);
   color: var(--danger);
   box-shadow: 0 0 0 2px rgba(158,134,137,0.15);
 }
+
 /* 背词页顶栏 */
 .study-topbar {
   display: flex;
@@ -4565,137 +4570,130 @@ function renderDotsHTML(done) {
   return s;
 }
 
-var studyCardLocked = false;
-
 function showCard(w, isReview) {
-  studyCardLocked = true;
+  const dots = studyWordProgress[w.id] || 0;
 
-  var dots = studyWordProgress[w.id] || 0;
-  var cardEl = document.getElementById('study-card');
-  var transEl = document.getElementById('study-translation');
-  var exampleEl = document.getElementById('study-example');
+  // ★ 关键修复：先禁用 transition，强制隐藏翻译和例句
+  const translationEl = document.getElementById('study-translation');
+  const exampleEl = document.getElementById('study-example');
+  
+  translationEl.style.transition = 'none';
+  exampleEl.style.transition = 'none';
+  translationEl.style.opacity = '0';
+  translationEl.style.transform = 'translateY(8px)';
+  exampleEl.style.opacity = '0';
 
-  // ★ 狠招：直接用 visibility 硬藏，不给任何闪现机会
-  transEl.style.visibility = 'hidden';
-  exampleEl.style.visibility = 'hidden';
-
-  // 移除翻转状态
+  const cardEl = document.getElementById('study-card');
   cardEl.classList.remove('card-revealed');
 
-  // 清空所有文字
-  document.getElementById('study-word').textContent = '';
-  document.getElementById('study-phonetic').textContent = '';
-  document.getElementById('study-pos').textContent = '';
-  transEl.textContent = '';
-  exampleEl.textContent = '';
+  // 强制浏览器应用上面的样式（触发 reflow）
+  void translationEl.offsetHeight;
 
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      // 填入新单词（英文部分可见）
-      document.getElementById('study-word').textContent = w.word;
-      document.getElementById('study-phonetic').textContent = w.phonetic || '';
-      document.getElementById('study-pos').textContent = w.pos || '';
+  // ★ 现在才安全地更新文本内容
+  document.getElementById('study-word').textContent = w.word;
+  document.getElementById('study-phonetic').textContent = w.phonetic || '';
+  document.getElementById('study-pos').textContent = w.pos || '';
+  translationEl.textContent = w.translation || '';
+  exampleEl.textContent = w.example || '';
 
-      // ★ 先写内容，但 visibility 还是 hidden，看不见
-      transEl.textContent = w.translation || '';
-      exampleEl.textContent = w.example || '';
-
-      cardEl.dataset.word = JSON.stringify(w);
-      cardEl.dataset.revealed = 'false';
-      cardEl.dataset.isReview = isReview ? 'true' : 'false';
-
-      var dotsEl = cardEl.querySelector('.study-dots');
-      if (!dotsEl) {
-        dotsEl = document.createElement('div');
-        dotsEl.className = 'study-dots';
-        dotsEl.style.cssText = 'position:absolute;top:12px;right:16px;display:flex;gap:4px;';
-        cardEl.appendChild(dotsEl);
-      }
-      dotsEl.innerHTML = renderDotsHTML(dots);
-
-      document.getElementById('study-btns-know').style.display = 'none';
-      document.getElementById('study-btns-quiz').style.display = 'none';
-      cardEl.style.display = 'flex';
-
-      setTimeout(function() { studyCardLocked = false; }, 250);
-    });
+  // ★ 恢复 transition（下次 card-revealed 时才会用到）
+  requestAnimationFrame(() => {
+    translationEl.style.transition = '';
+    translationEl.style.opacity = '';
+    translationEl.style.transform = '';
+    exampleEl.style.transition = '';
+    exampleEl.style.opacity = '';
   });
+
+  cardEl.dataset.word = JSON.stringify(w);
+  cardEl.dataset.revealed = 'false';
+  cardEl.dataset.isReview = isReview ? 'true' : 'false';
+
+  // 在卡片顶部显示进度点
+  let dotsEl = cardEl.querySelector('.study-dots');
+  if (!dotsEl) {
+    dotsEl = document.createElement('div');
+    dotsEl.className = 'study-dots';
+    dotsEl.style.cssText = 'position:absolute;top:12px;right:16px;display:flex;gap:4px;';
+    cardEl.appendChild(dotsEl);
+  }
+  dotsEl.innerHTML = renderDotsHTML(dots);
+
+  document.getElementById('study-btns-know').style.display = 'none';
+  document.getElementById('study-btns-quiz').style.display = 'none';
+  cardEl.style.display = 'flex';
 }
 
 function tapStudyCard() {
-  if (studyCardLocked) return;
-  var cardEl = document.getElementById('study-card');
+  const cardEl = document.getElementById('study-card');
   if (cardEl.dataset.revealed === 'true') return;
   cardEl.dataset.revealed = 'true';
   cardEl.classList.add('card-revealed');
-
-  // ★ 点击翻转时才把 visibility 放开，配合 opacity 动画
-  document.getElementById('study-translation').style.visibility = 'visible';
-  document.getElementById('study-example').style.visibility = 'visible';
-
+  // 显示按钮
   document.getElementById('study-btns-know').style.display = 'flex';
 }
 
 function answerWord(know) {
-  if (studyCardLocked) return;
-  studyCardLocked = true;
+  const cardEl = document.getElementById('study-card');
+  const w = JSON.parse(cardEl.dataset.word);
+  const progress = DB.get('wordProgress') || {};
 
-  var cardEl = document.getElementById('study-card');
-  var w = JSON.parse(cardEl.dataset.word);
-  var progress = DB.get('wordProgress') || {};
+  // 先让当前卡片渐出
+  cardEl.classList.add('card-fading-out');
+  // 同时隐藏按钮，防止重复点击
+  document.getElementById('study-btns-know').style.display = 'none';
 
-  if (know) {
-    studyWordProgress[w.id] = (studyWordProgress[w.id] || 0) + 1;
+  // 等渐出动画结束后再处理逻辑和显示下一个
+  setTimeout(() => {
+    if (know) {
+      studyWordProgress[w.id] = (studyWordProgress[w.id] || 0) + 1;
 
-    if (studyWordProgress[w.id] >= 3) {
-      var p = progress[w.id] || {};
-      var sm = sm2(p, true);
-      var isLearned = sm.interval >= 21;
-      progress[w.id] = {
-        status: isLearned ? 'learned' : 'reviewed',
-        interval: sm.interval,
-        easeFactor: sm.easeFactor,
-        repetitions: sm.repetitions,
-        nextReview: Date.now() + sm.interval * 24 * 60 * 60 * 1000,
-        firstLearnedAt: (progress[w.id] || {}).firstLearnedAt || Date.now(),
-        learnedAt: Date.now()
-      };
-      if (!studySessionWords.find(function(x) { return x.id === w.id; })) {
-        studySessionWords.push(w);
+      if (studyWordProgress[w.id] >= 3) {
+        const p = progress[w.id] || {};
+        const sm = sm2(p, true);
+        const isLearned = sm.interval >= 21;
+        progress[w.id] = {
+          status: isLearned ? 'learned' : 'reviewed',
+          ...sm,
+          nextReview: Date.now() + sm.interval * 24 * 60 * 60 * 1000,
+          firstLearnedAt: (progress[w.id] || {}).firstLearnedAt || Date.now(),
+          learnedAt: Date.now()
+        };
+        if (!studySessionWords.find(x => x.id === w.id)) {
+          studySessionWords.push(w);
+        }
+        studyDoneCount++;
+        studyCurrentList.shift();
+      } else {
+        progress[w.id] = {
+          ...(progress[w.id] || {}),
+          status: 'learning',
+          firstLearnedAt: (progress[w.id] || {}).firstLearnedAt || Date.now()
+        };
+        studyCurrentList.shift();
+        studyCurrentList.push(w);
       }
-      studyDoneCount++;
-      studyCurrentList.shift();
     } else {
+      studyWordProgress[w.id] = 0;
       progress[w.id] = {
         ...(progress[w.id] || {}),
         status: 'learning',
+        wrongCount: ((progress[w.id] || {}).wrongCount || 0) + 1,
         firstLearnedAt: (progress[w.id] || {}).firstLearnedAt || Date.now()
       };
       studyCurrentList.shift();
       studyCurrentList.push(w);
     }
-  } else {
-    studyWordProgress[w.id] = 0;
-    progress[w.id] = {
-      ...(progress[w.id] || {}),
-      status: 'learning',
-      wrongCount: ((progress[w.id] || {}).wrongCount || 0) + 1,
-      firstLearnedAt: (progress[w.id] || {}).firstLearnedAt || Date.now()
-    };
-    studyCurrentList.shift();
-    studyCurrentList.push(w);
-  }
 
-  DB.set('wordProgress', progress);
-  showCurrentWord();
+    DB.set('wordProgress', progress);
+
+    // 移除渐出类，重置透明度（此时内容还未更新，但卡片不可见）
+    cardEl.classList.remove('card-fading-out');
+    // 立即显示下一个词（卡片已经是 opacity:1 了，内容瞬间切换，无泄题）
+    showCurrentWord();
+  }, 250); // 与动画时长一致
 }
-
 function showQuiz(w, isReview) {
-document.getElementById('study-word').textContent = '';
-document.getElementById('study-phonetic').textContent = '';
-document.getElementById('study-pos').textContent = '';
-document.getElementById('study-translation').textContent = '';
-document.getElementById('study-example').textContent = '';
   const wb = getWordbookData(DB.get('appSettings').activeWordbookId);
   const allWords = wb.words || [];
   const quizType = Math.random() > 0.5 ? 0 : 1;
@@ -4729,9 +4727,7 @@ document.getElementById('study-example').textContent = '';
 
   const dots = studyWordProgress[w.id] || 0;
   document.getElementById('study-mode-label').textContent = `练习 ${renderDotsText(dots)}`;
-  document.getElementById('quiz-question').innerHTML = 
-  '<div style="font-size:32px;font-weight:700;color:var(--text-main);letter-spacing:0.5px;">' + question + '</div>'
-  + '<div style="margin-top:10px;">' + renderDotsHTML(dots) + '</div>';
+  document.getElementById('quiz-question').innerHTML = question + '<div style="margin-top:8px;">' + renderDotsHTML(dots) + '</div>';
 
   document.getElementById('quiz-options').innerHTML = options.map(o => `
     <button class="quiz-option" data-correct="${o.correct}" onclick="answerQuiz(this, ${o.correct}, '${w.id}', ${isReview})">
@@ -4740,9 +4736,8 @@ document.getElementById('study-example').textContent = '';
   `).join('');
 
   document.getElementById('study-btns-know').style.display = 'none';
-  document.getElementById('study-btns-quiz').style.display = 'block';
+  document.getElementById('study-btns-quiz').style.display = 'flex';
   document.getElementById('study-card').style.display = 'none';
-studyCardLocked = false;
 }
 
 function answerQuiz(btn, correct, wordId, isReview) {
@@ -4760,54 +4755,63 @@ function answerQuiz(btn, correct, wordId, isReview) {
   const progress = DB.get('wordProgress') || {};
   const w = studyCurrentList[0];
 
+  // 先显示对错反馈 800ms，然后渐出，再切换下一题
   setTimeout(() => {
-    if (correct) {
-      studyWordProgress[wordId] = (studyWordProgress[wordId] || 0) + 1;
+    // 渐出选择题区域
+    const quizWrap = document.getElementById('study-btns-quiz');
+    quizWrap.style.transition = 'opacity 0.25s ease';
+    quizWrap.style.opacity = '0';
 
-      if (studyWordProgress[wordId] >= 3) {
-        // 完成
-        const p = progress[wordId] || {};
-        const sm = sm2(p, true);
-        const isLearned = sm.interval >= 21;
-        progress[wordId] = {
-          ...p,
-          status: isLearned ? 'learned' : 'reviewed',
-          ...sm,
-          nextReview: Date.now() + sm.interval * 24 * 60 * 60 * 1000,
-          firstLearnedAt: p.firstLearnedAt || Date.now(),
-          learnedAt: Date.now()
-        };
-        if (!studySessionWords.find(x => x.id === wordId)) {
-          studySessionWords.push(w);
+    setTimeout(() => {
+      if (correct) {
+        studyWordProgress[wordId] = (studyWordProgress[wordId] || 0) + 1;
+
+        if (studyWordProgress[wordId] >= 3) {
+          const p = progress[wordId] || {};
+          const sm = sm2(p, true);
+          const isLearned = sm.interval >= 21;
+          progress[wordId] = {
+            ...p,
+            status: isLearned ? 'learned' : 'reviewed',
+            ...sm,
+            nextReview: Date.now() + sm.interval * 24 * 60 * 60 * 1000,
+            firstLearnedAt: p.firstLearnedAt || Date.now(),
+            learnedAt: Date.now()
+          };
+          if (!studySessionWords.find(x => x.id === wordId)) {
+            studySessionWords.push(w);
+          }
+          studyDoneCount++;
+          studyCurrentList.shift();
+        } else {
+          progress[wordId] = {
+            ...(progress[wordId] || {}),
+            status: 'learning',
+            firstLearnedAt: (progress[wordId] || {}).firstLearnedAt || Date.now()
+          };
+          studyCurrentList.shift();
+          studyCurrentList.push(w);
         }
-        studyDoneCount++;
-        studyCurrentList.shift();
-   } else {
-  // 还没3次，放后面
-  progress[wordId] = {
-    ...(progress[wordId] || {}),
-    status: 'learning',
-    firstLearnedAt: (progress[wordId] || {}).firstLearnedAt || Date.now()
-  };
+      } else {
+        studyWordProgress[wordId] = 0;
+        progress[wordId] = {
+          ...(progress[wordId] || {}),
+          status: 'learning',
+          wrongCount: ((progress[wordId] || {}).wrongCount || 0) + 1,
+          firstLearnedAt: (progress[wordId] || {}).firstLearnedAt || Date.now()
+        };
         studyCurrentList.shift();
         studyCurrentList.push(w);
       }
-    } else {
-  // 答错，进度点清零
-  studyWordProgress[wordId] = 0;
-  progress[wordId] = {
-    ...(progress[wordId] || {}),
-    status: 'learning',
-    wrongCount: ((progress[wordId] || {}).wrongCount || 0) + 1,
-    firstLearnedAt: (progress[wordId] || {}).firstLearnedAt || Date.now()
-  };
-      studyCurrentList.shift();
-      studyCurrentList.push(w);
-    }
 
-    DB.set('wordProgress', progress);
-    showCurrentWord();
-  }, 1000);
+      DB.set('wordProgress', progress);
+
+      // 重置透明度，然后显示下一题
+      quizWrap.style.transition = 'none';
+      quizWrap.style.opacity = '1';
+      showCurrentWord();
+    }, 250); // 渐出时长
+  }, 800); // 对错反馈展示时长
 }
 
 function finishStudy() {
