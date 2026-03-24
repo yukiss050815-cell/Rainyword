@@ -423,15 +423,12 @@ padding-top: env(safe-area-inset-top);
   font-weight: 600;
   color: var(--text-main);
   opacity: 0;
-  visibility: hidden;
   transform: translateY(8px);
-  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s linear 0.3s;
+  transition: all 0.3s ease;
 }
 .study-card.card-revealed .study-translation {
   opacity: 1;
-  visibility: visible;
   transform: translateY(0);
-  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s linear 0s;
 }
 .study-example {
   font-size: 13px;
@@ -441,13 +438,10 @@ padding-top: env(safe-area-inset-top);
   font-style: italic;
   max-width: 280px;
   opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease 0.1s, visibility 0s linear 0.4s;
+  transition: opacity 0.3s ease 0.1s;
 }
 .study-card.card-revealed .study-example {
   opacity: 1;
-  visibility: visible;
-  transition: opacity 0.3s ease 0.1s, visibility 0s linear 0s;
 }
 
 /* 点击翻转提示 */
@@ -1807,11 +1801,11 @@ body.theme-glass .chat-messages {
 /* ===== iOS PWA 底部安全区统一修复 ===== */
 .bottom-nav {
     padding: 10px 0;
-    padding-bottom: calc(28px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
 }
 
 .chat-input-area {
-    padding-bottom: calc(28px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
 }
 
 main {
@@ -4599,44 +4593,38 @@ function renderDotsHTML(done) {
   return s;
 }
 
-var studyCardLocked = false;function showCard(w, isReview) {
+var studyCardLocked = false;
+
+function showCard(w, isReview) {
   studyCardLocked = true;
 
   var dots = studyWordProgress[w.id] || 0;
   var cardEl = document.getElementById('study-card');
-
-  // 1. 先移除翻转状态
-  cardEl.classList.remove('card-revealed');
-
-  // 2. 完全隐藏释义（用 visibility 而非 opacity，防止任何闪现）
   var transEl = document.getElementById('study-translation');
   var exampleEl = document.getElementById('study-example');
-  transEl.style.visibility = 'hidden';
-  transEl.style.opacity = '0';
-  transEl.style.transform = 'translateY(8px)';
-  exampleEl.style.visibility = 'hidden';
-  exampleEl.style.opacity = '0';
 
-  // 3. 清空所有内容
+  // ★ 狠招：直接用 visibility 硬藏，不给任何闪现机会
+  transEl.style.visibility = 'hidden';
+  exampleEl.style.visibility = 'hidden';
+
+  // 移除翻转状态
+  cardEl.classList.remove('card-revealed');
+
+  // 清空所有文字
   document.getElementById('study-word').textContent = '';
   document.getElementById('study-phonetic').textContent = '';
   document.getElementById('study-pos').textContent = '';
   transEl.textContent = '';
   exampleEl.textContent = '';
 
-  // 4. 隐藏按钮
-  document.getElementById('study-btns-know').style.display = 'none';
-  document.getElementById('study-btns-quiz').style.display = 'none';
-  cardEl.style.display = 'flex';
-
-  // 5. 等两帧再填入新内容
   requestAnimationFrame(function() {
     requestAnimationFrame(function() {
+      // 填入新单词（英文部分可见）
       document.getElementById('study-word').textContent = w.word;
       document.getElementById('study-phonetic').textContent = w.phonetic || '';
       document.getElementById('study-pos').textContent = w.pos || '';
 
-      // 先写入释义文字，但保持不可见
+      // ★ 先写内容，但 visibility 还是 hidden，看不见
       transEl.textContent = w.translation || '';
       exampleEl.textContent = w.example || '';
 
@@ -4653,10 +4641,15 @@ var studyCardLocked = false;function showCard(w, isReview) {
       }
       dotsEl.innerHTML = renderDotsHTML(dots);
 
+      document.getElementById('study-btns-know').style.display = 'none';
+      document.getElementById('study-btns-quiz').style.display = 'none';
+      cardEl.style.display = 'flex';
+
       setTimeout(function() { studyCardLocked = false; }, 250);
     });
   });
 }
+
 function tapStudyCard() {
   if (studyCardLocked) return;
   var cardEl = document.getElementById('study-card');
@@ -4664,14 +4657,9 @@ function tapStudyCard() {
   cardEl.dataset.revealed = 'true';
   cardEl.classList.add('card-revealed');
 
-  // 翻转时：先让 visibility 可见，再靠 CSS transition 做 opacity 动画
-  var transEl = document.getElementById('study-translation');
-  var exampleEl = document.getElementById('study-example');
-  transEl.style.visibility = 'visible';
-  transEl.style.opacity = '';
-  transEl.style.transform = '';
-  exampleEl.style.visibility = 'visible';
-  exampleEl.style.opacity = '';
+  // ★ 点击翻转时才把 visibility 放开，配合 opacity 动画
+  document.getElementById('study-translation').style.visibility = 'visible';
+  document.getElementById('study-example').style.visibility = 'visible';
 
   document.getElementById('study-btns-know').style.display = 'flex';
 }
@@ -4731,128 +4719,123 @@ function answerWord(know) {
 }
 
 function showQuiz(w, isReview) {
-  // 彻底隐藏卡片上的所有内容（防止闪现）
-  var transEl = document.getElementById('study-translation');
-  var exampleEl = document.getElementById('study-example');
-  document.getElementById('study-word').textContent = '';
-  document.getElementById('study-phonetic').textContent = '';
-  document.getElementById('study-pos').textContent = '';
-  transEl.textContent = '';
-  transEl.style.visibility = 'hidden';
-  transEl.style.opacity = '0';
-  exampleEl.textContent = '';
-  exampleEl.style.visibility = 'hidden';
-  exampleEl.style.opacity = '0';
+document.getElementById('study-word').textContent = '';
+document.getElementById('study-phonetic').textContent = '';
+document.getElementById('study-pos').textContent = '';
+document.getElementById('study-translation').textContent = '';
+document.getElementById('study-example').textContent = '';
+  const wb = getWordbookData(DB.get('appSettings').activeWordbookId);
+  const allWords = wb.words || [];
+  const quizType = Math.random() > 0.5 ? 0 : 1;
 
-  var wb = getWordbookData(DB.get('appSettings').activeWordbookId);
-  var allWords = wb.words || [];
-  var quizType = Math.random() > 0.5 ? 0 : 1;
-
-  var distractors = allWords
-    .filter(function(x) { return x.id !== w.id; })
-    .sort(function() { return Math.random() - 0.5; })
+  let distractors = allWords
+    .filter(x => x.id !== w.id)
+    .sort(() => Math.random() - 0.5)
     .slice(0, 3);
 
-  var options, question;
+  let options, question;
   if (quizType === 0) {
-    // 给单词，选中文
     question = w.word;
     options = [
-      { text: w.translation, correct: true }
-    ].concat(distractors.map(function(d) { return { text: d.translation, correct: false }; }));
+      { text: w.translation, correct: true },
+      ...distractors.map(d => ({ text: d.translation, correct: false }))
+    ];
   } else {
-    // 给中文，选单词
     question = w.translation;
     options = [
-      { text: w.word, correct: true }
-    ].concat(distractors.map(function(d) { return { text: d.word, correct: false }; }));
+      { text: w.word, correct: true },
+      ...distractors.map(d => ({ text: d.word, correct: false }))
+    ];
   }
-  options = options.sort(function() { return Math.random() - 0.5; });
+  options = options.sort(() => Math.random() - 0.5);
 
-  var dots = studyWordProgress[w.id] || 0;
-  document.getElementById('study-mode-label').textContent = '练习 ' + renderDotsText(dots);
+  document.getElementById('study-word').textContent = w.word;
+  document.getElementById('study-phonetic').textContent = w.phonetic || '';
+  document.getElementById('study-pos').textContent = w.pos || '';
+  document.getElementById('study-translation').textContent = w.translation || '';
+  document.getElementById('study-example').textContent = '';
 
-  // 题目区域：只显示题目和进度点，不显示释义
-  document.getElementById('quiz-question').innerHTML =
-    '<div style="font-size:32px;font-weight:700;color:var(--text-main);letter-spacing:0.5px;">' + question + '</div>'
-    + '<div style="margin-top:10px;">' + renderDotsHTML(dots) + '</div>';
+  const dots = studyWordProgress[w.id] || 0;
+  document.getElementById('study-mode-label').textContent = `练习 ${renderDotsText(dots)}`;
+  document.getElementById('quiz-question').innerHTML = 
+  '<div style="font-size:32px;font-weight:700;color:var(--text-main);letter-spacing:0.5px;">' + question + '</div>'
+  + '<div style="margin-top:10px;">' + renderDotsHTML(dots) + '</div>';
 
-  // 选项区域
-  document.getElementById('quiz-options').innerHTML = options.map(function(o) {
-    return '<button class="quiz-option" data-correct="' + o.correct + '" onclick="answerQuiz(this, ' + o.correct + ', \'' + w.id + '\', ' + isReview + ')">'
-      + o.text
-      + '</button>';
-  }).join('');
+  document.getElementById('quiz-options').innerHTML = options.map(o => `
+    <button class="quiz-option" data-correct="${o.correct}" onclick="answerQuiz(this, ${o.correct}, '${w.id}', ${isReview})">
+      ${o.text}
+    </button>
+  `).join('');
 
-  // 隐藏翻卡按钮，显示选择题，隐藏卡片
   document.getElementById('study-btns-know').style.display = 'none';
   document.getElementById('study-btns-quiz').style.display = 'block';
   document.getElementById('study-card').style.display = 'none';
-  studyCardLocked = false;
+studyCardLocked = false;
 }
 
-function answerWord(know) {
-  if (studyCardLocked) return;
-  studyCardLocked = true;
+function answerQuiz(btn, correct, wordId, isReview) {
+  document.querySelectorAll('.quiz-option').forEach(b => b.disabled = true);
+  btn.classList.add(correct ? 'correct' : 'wrong');
 
-  // 立即隐藏释义，防止切换到下一个词时闪现
-  var transEl = document.getElementById('study-translation');
-  var exampleEl = document.getElementById('study-example');
-  transEl.style.visibility = 'hidden';
-  transEl.style.opacity = '0';
-  exampleEl.style.visibility = 'hidden';
-  exampleEl.style.opacity = '0';
-
-  var cardEl = document.getElementById('study-card');
-  cardEl.classList.remove('card-revealed');
-
-  var w = JSON.parse(cardEl.dataset.word);
-  var progress = DB.get('wordProgress') || {};
-
-  if (know) {
-    studyWordProgress[w.id] = (studyWordProgress[w.id] || 0) + 1;
-
-    if (studyWordProgress[w.id] >= 3) {
-      var p = progress[w.id] || {};
-      var sm = sm2(p, true);
-      var isLearned = sm.interval >= 21;
-      progress[w.id] = {
-        status: isLearned ? 'learned' : 'reviewed',
-        interval: sm.interval,
-        easeFactor: sm.easeFactor,
-        repetitions: sm.repetitions,
-        nextReview: Date.now() + sm.interval * 24 * 60 * 60 * 1000,
-        firstLearnedAt: (progress[w.id] || {}).firstLearnedAt || Date.now(),
-        learnedAt: Date.now()
-      };
-      if (!studySessionWords.find(function(x) { return x.id === w.id; })) {
-        studySessionWords.push(w);
+  if (!correct) {
+    document.querySelectorAll('.quiz-option').forEach(b => {
+      if (b !== btn && b.dataset.correct === 'true') {
+        b.classList.add('correct');
       }
-      studyDoneCount++;
-      studyCurrentList.shift();
+    });
+  }
+
+  const progress = DB.get('wordProgress') || {};
+  const w = studyCurrentList[0];
+
+  setTimeout(() => {
+    if (correct) {
+      studyWordProgress[wordId] = (studyWordProgress[wordId] || 0) + 1;
+
+      if (studyWordProgress[wordId] >= 3) {
+        // 完成
+        const p = progress[wordId] || {};
+        const sm = sm2(p, true);
+        const isLearned = sm.interval >= 21;
+        progress[wordId] = {
+          ...p,
+          status: isLearned ? 'learned' : 'reviewed',
+          ...sm,
+          nextReview: Date.now() + sm.interval * 24 * 60 * 60 * 1000,
+          firstLearnedAt: p.firstLearnedAt || Date.now(),
+          learnedAt: Date.now()
+        };
+        if (!studySessionWords.find(x => x.id === wordId)) {
+          studySessionWords.push(w);
+        }
+        studyDoneCount++;
+        studyCurrentList.shift();
+   } else {
+  // 还没3次，放后面
+  progress[wordId] = {
+    ...(progress[wordId] || {}),
+    status: 'learning',
+    firstLearnedAt: (progress[wordId] || {}).firstLearnedAt || Date.now()
+  };
+        studyCurrentList.shift();
+        studyCurrentList.push(w);
+      }
     } else {
-      progress[w.id] = {
-        ...(progress[w.id] || {}),
-        status: 'learning',
-        firstLearnedAt: (progress[w.id] || {}).firstLearnedAt || Date.now()
-      };
+  // 答错，进度点清零
+  studyWordProgress[wordId] = 0;
+  progress[wordId] = {
+    ...(progress[wordId] || {}),
+    status: 'learning',
+    wrongCount: ((progress[wordId] || {}).wrongCount || 0) + 1,
+    firstLearnedAt: (progress[wordId] || {}).firstLearnedAt || Date.now()
+  };
       studyCurrentList.shift();
       studyCurrentList.push(w);
     }
-  } else {
-    studyWordProgress[w.id] = 0;
-    progress[w.id] = {
-      ...(progress[w.id] || {}),
-      status: 'learning',
-      wrongCount: ((progress[w.id] || {}).wrongCount || 0) + 1,
-      firstLearnedAt: (progress[w.id] || {}).firstLearnedAt || Date.now()
-    };
-    studyCurrentList.shift();
-    studyCurrentList.push(w);
-  }
 
-  DB.set('wordProgress', progress);
-  showCurrentWord();
+    DB.set('wordProgress', progress);
+    showCurrentWord();
+  }, 1000);
 }
 
 function finishStudy() {
