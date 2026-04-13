@@ -1128,23 +1128,23 @@
 
 /* 聊天输入区 */
 .chat-input-area {
-    background: rgba(240, 240, 240, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-top: 1px solid rgba(0,0,0,0.06);
-    padding: 10px 14px;
-    padding-bottom: calc(16px + env(safe-area-inset-bottom)); /* 10px → 16px */
+    background: transparent;
+    border-top: none;
+    padding: 10px 12px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     gap: 0;
 }
 
+
 .chat-input-row {
   display: flex;
-  align-items: flex-end;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
 }
+
 
 /* 输入框外层包裹 */
 .chat-input-wrap {
@@ -1438,7 +1438,7 @@
 .sticker-tab-bar { display: flex; padding: 6px 8px; overflow-x: auto; border-bottom: 1px solid var(--border-color); }
 .sticker-cat-tab { padding: 6px 12px; font-size: 13px; cursor: pointer; color: var(--text-muted); white-space: nowrap; }
 .sticker-cat-tab.active { color: var(--text-main); border-bottom: 2px solid var(--text-main); }
-.sticker-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; padding: 8px; }
+.sticker-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; padding: 6px; }
 .sticker-thumb { aspect-ratio:1; border-radius:6px; overflow:hidden; background:#F3F4F6; cursor:pointer; }
 .sticker-thumb img { width:100%; height:100%; object-fit:cover; }
 /* ===== 记录多选 & 命名 ===== */
@@ -1860,7 +1860,7 @@ body.theme-glass .chat-messages {
 /* 消息多选模式 */
 .chat-multiselect-bar {
   display: none;
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -1868,7 +1868,7 @@ body.theme-glass .chat-messages {
   border-bottom: 1px solid var(--border-color);
   padding: 12px 16px;
   padding-top: calc(12px + env(safe-area-inset-top));
-  z-index: 50;
+  z-index: 200;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -2010,10 +2010,56 @@ body.theme-glass .chat-messages {
   padding: 10px;
   font-size: 13px;
 }
+/* ===== 新输入栏：圆+椭圆+圆 ===== */
+.chat-circle-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.15s;
+  background: rgba(255,255,255,0.85); color: var(--text-muted);
+  padding: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.chat-circle-btn:active { transform: scale(0.9); }
+.chat-circle-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+.chat-circle-send { background: var(--text-main); color: #fff; box-shadow: none; }
+.chat-oval-wrap {
+  flex: 1; display: flex; align-items: center;
+  background: #fff; border-radius: 20px;
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 0 8px 0 14px; gap: 2px;
+  min-height: 40px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.chat-oval-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  padding: 10px 0; font-size: 15px; resize: none;
+  max-height: 90px; overflow-y: auto; line-height: 1.4;
+  font-family: inherit; color: #111827;
+}
 
-    </style>
+
+
+    
+/* --- 补丁：表情包优化与新功能样式 --- */
+.msg-sticker { max-width: 110px !important; border-radius: 8px; overflow: hidden; }
+#pomo-float { position: fixed; right: 16px; top: calc(100px + env(safe-area-inset-top)); background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 8px 12px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; align-items: center; gap: 8px; z-index: 200; border: 1px solid var(--border-color); font-size: 13px; font-weight: 600; }
+.pomo-dot { width: 8px; height: 8px; border-radius: 50%; background: #EF4444; animation: pulse 2s infinite; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+.spelling-area { width: 100%; margin-top: 20px; text-align: center; }
+.spelling-input { width: 100%; background: transparent; border: none; border-bottom: 2px solid var(--border-color); font-size: 24px; text-align: center; padding: 10px; outline: none; font-family: monospace; letter-spacing: 4px; color: var(--text-main); }
+.spelling-input.correct { border-color: var(--success); color: var(--success); }
+.spelling-input.wrong { border-color: var(--danger); color: var(--danger); }
+.spelling-placeholder { font-size: 18px; color: var(--text-muted); margin-top: 8px; letter-spacing: 4px; }
+
+/* --- V2 补丁样式 --- */
+.distraction-toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--danger); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 1000; animation: slideDown 0.3s ease, fadeOut 0.5s 2s forwards; }
+@keyframes slideDown { from { top: -50px; } to { top: 20px; } }
+@keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+</style>
 </head>
 <body>
+<div id="pomo-float"><div class="pomo-dot"></div><span id="pomo-time">25:00</span></div>
 
     <!-- 内容区域 -->
     <main>
@@ -2125,6 +2171,7 @@ body.theme-glass .chat-messages {
 <div id="words-start" style="display:none;margin-top:16px;">
   <button class="btn" style="width:100%;padding:14px;font-size:16px;border-radius:14px;margin-bottom:10px;" onclick="startStudy()">开始学习</button>
   <button class="btn" style="width:100%;padding:14px;font-size:16px;border-radius:14px;background:#F3F4F6;color:var(--text-main);" onclick="openSubPage('ai-companion')">陪伴</button>
+<button class="btn" style="width:100%;padding:14px;font-size:16px;border-radius:14px;background:#F3F4F6;color:var(--text-main);margin-top:10px;" onclick="togglePomo()">番茄钟</button>
   <div style="display:flex;justify-content:flex-end;margin-top:10px;">
     <span style="font-size:13px;color:var(--text-muted);cursor:pointer;" onclick="openSubPage('study-settings');initStudySettings()">学习设置</span>
   </div>
@@ -2226,6 +2273,21 @@ body.theme-glass .chat-messages {
   </svg>
 </div>
 
+    
+<div class="menu-item" onclick="openSubPage('focus-settings')">
+  <span>专注与拼写设置</span>
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+</div>
+<div class="menu-item" onclick="openSubPage('screen-time-sync')">
+  <span>iOS 屏幕时间同步</span>
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+</div>
+<div class="menu-item" onclick="openSubPage('data-manager')">
+      <span>数据管理</span>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </div>
     <div class="menu-item" onclick="openSubPage('api-settings')">
       <span>API 配置</span>
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor">
@@ -2249,6 +2311,7 @@ body.theme-glass .chat-messages {
     <span style="width:44px;"></span>
   </div>
   <div class="sub-page-content">
+
     <div class="char-detail-hero">
       <div class="char-detail-avatar">
         <img id="detail-avatar-display" src="" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px;display:none;">
@@ -2386,7 +2449,8 @@ body.theme-glass .chat-messages {
     <span class="page-title" style="margin:0;font-size:16px;">词书管理</span>
     <span style="width:44px;"></span>
   </div>
-  <div class="sub-page-content">
+ <div class="sub-page-content">
+
 
     <!-- 内置词书 -->
     <div class="wb-section-title">内置词书</div>
@@ -2431,11 +2495,17 @@ body.theme-glass .chat-messages {
 
     <!-- 单词卡片 -->
     <div class="study-card" id="study-card" onclick="tapStudyCard()">
-      <div class="study-word" id="study-word">---</div>
+    <div class="study-word" id="study-word" onclick="speakWord(this.textContent)" style="cursor:pointer;" title="点击朗读">---</div>
+
       <div class="study-phonetic" id="study-phonetic"></div>
       <div class="study-pos" id="study-pos"></div>
       <div class="study-divider"></div>
       <div class="study-translation" id="study-translation"></div>
+    <div id="spelling-area" class="spelling-area" style="display:none;">
+        <input type="text" id="spelling-input" class="spelling-input" placeholder="输入拼写" autocomplete="off" oninput="checkSpelling(this.value)">
+        <div id="spelling-placeholder" class="spelling-placeholder"></div>
+    </div>
+
       <div class="study-example" id="study-example"></div>
       <div class="study-tap-hint">点击卡片翻转</div>
     </div>
@@ -2506,7 +2576,8 @@ body.theme-glass .chat-messages {
     <span class="page-title" style="margin:0;font-size:16px;">学习设置</span>
     <span style="width:44px;"></span>
   </div>
-  <div class="sub-page-content">
+ <div class="sub-page-content">
+
 
     <div class="form-group">
       <label>每组单词数量</label>
@@ -2576,7 +2647,8 @@ body.theme-glass .chat-messages {
     <span class="page-title" style="margin:0;font-size:16px;" id="profile-edit-title">新建账号</span>
     <span style="width:44px;"></span>
   </div>
-  <div class="sub-page-content">
+ <div class="sub-page-content">
+
 
     <!-- 头像 -->
     <div class="form-group" style="display:flex;flex-direction:column;align-items:center;gap:12px;">
@@ -2639,7 +2711,8 @@ body.theme-glass .chat-messages {
     <span class="page-title" style="margin:0;font-size:16px;">主题风格</span>
     <span style="width:44px;"></span>
   </div>
-  <div class="sub-page-content">
+ <div class="sub-page-content">
+
     <div id="theme-list" style="display:flex;flex-direction:column;gap:10px;"></div>
   </div>
 </div>
@@ -2658,7 +2731,8 @@ body.theme-glass .chat-messages {
                 <span style="width: 44px;"></span> <!-- 占位符，用于居中标题 -->
             </div>
             
-            <div class="sub-page-content">
+        <div class="sub-page-content">
+
                 <div class="form-group">
                     <label>预设管理</label>
                     <select id="preset-select" onchange="loadPreset()">
@@ -2721,6 +2795,44 @@ body.theme-glass .chat-messages {
             </div>
         </div>
 
+<!-- 【模块：数据管理子页面】 -->
+<div id="data-manager" class="sub-page">
+  <div class="sub-page-header">
+    <span class="back-btn" onclick="closeSubPage('data-manager')">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" style="margin-right:4px;">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>返回
+    </span>
+    <span class="page-title" style="margin:0;font-size:16px;">数据管理</span>
+    <span style="width:44px;"></span>
+  </div>
+ <div class="sub-page-content">
+
+    <div class="form-group">
+      <label>备份导出</label>
+      <p class="note">将全部数据（角色、词书、记录、设置、API配置等）打包为 JSON 文件，可用于迁移或备份</p>
+      <button class="btn" style="width:100%;padding:13px;font-size:15px;" onclick="exportAllData()">
+        导出全部数据
+      </button>
+    </div>
+    <div class="form-group" style="margin-top:16px;">
+      <label>恢复导入</label>
+      <p class="note" style="color:#EF4444;">⚠️ 导入会完全覆盖当前所有数据，建议先备份</p>
+      <button class="btn" style="width:100%;padding:13px;font-size:15px;background:#F3F4F6;color:var(--text-main);"
+        onclick="document.getElementById('data-import-file').click()">
+        选择备份文件导入
+      </button>
+      <input type="file" id="data-import-file" accept=".json" style="display:none;"
+        onchange="importAllData(event)">
+    </div>
+    <div class="form-group" style="margin-top:16px;">
+      <label>存储占用估算</label>
+      <p class="note">localStorage 当前使用量（约估，不含IndexedDB）</p>
+      <div id="storage-usage" style="font-size:15px;font-weight:600;color:var(--text-main);padding-top:4px;"></div>
+    </div>
+  </div>
+</div>
+
 <!-- 账号切换抽屉 -->
 <div id="account-sheet-mask" onclick="closeAccountSheet()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:300;"></div>
 <div id="account-sheet" style="display:none;position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;z-index:301;padding-bottom:env(safe-area-inset-bottom);max-height:70vh;overflow-y:auto;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.25,0.8,0.25,1);">
@@ -2746,7 +2858,8 @@ body.theme-glass .chat-messages {
     <span class="page-title" style="margin:0;font-size:16px;">陪伴</span>
     <span style="width:44px;"></span>
   </div>
-  <div class="sub-page-content">
+ <div class="sub-page-content">
+
 
     <!-- 当前角色提示 -->
     <div id="companion-char-tip" style="display:none;background:#fff;border-radius:12px;border:1px solid var(--border-color);padding:12px 14px;margin-bottom:20px;align-items:center;gap:10px;">
@@ -2977,6 +3090,16 @@ body.theme-glass .chat-messages {
   <div class="chat-settings-panel" id="chat-settings-panel">
     <div class="chat-setting-row">
       <div>
+        <div class="chat-setting-label">时间感知</div>
+        <div class="chat-setting-desc">注入当前时间和聊天间隔</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="chat-time-inject-toggle" onchange="saveChatSettings()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="chat-setting-row">
+      <div>
         <div class="chat-setting-label">注入历史轮次</div>
         <div class="chat-setting-desc">发给AI的历史消息条数（越多越费token）</div>
       </div>
@@ -3030,19 +3153,17 @@ body.theme-glass .chat-messages {
     <div class="sticker-grid" id="sticker-grid"></div>
   </div>
   <!-- 输入行 -->
-  <div class="chat-input-row">
-    <!-- 左：触发回复 -->
-    <button class="chat-icon-btn" id="chat-trigger-btn" onclick="triggerAIReply()" disabled>
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8">
+   <div class="chat-input-row">
+    <button class="chat-circle-btn" id="chat-trigger-btn" onclick="triggerAIReply()" disabled>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
         <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
       </svg>
     </button>
-    <!-- 中：输入框（内含表情按钮） -->
-    <div class="chat-input-wrap">
-      <textarea class="chat-input-box" id="chat-input" placeholder="说点什么…" rows="1"
+    <div class="chat-oval-wrap">
+      <textarea class="chat-oval-input" id="chat-input" placeholder="说点什么…" rows="1"
         oninput="onChatInput(this)" onkeydown="onChatKeydown(event)"></textarea>
-      <button class="chat-icon-btn" onclick="toggleStickerPanel()">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8">
+      <button class="chat-icon-btn" onclick="toggleStickerPanel()" style="width:32px;height:32px;">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
           <circle cx="12" cy="12" r="10"/>
           <path stroke-linecap="round" d="M8 14s1.5 2 4 2 4-2 4-2"/>
           <line x1="9" y1="9" x2="9.01" y2="9" stroke-width="3" stroke-linecap="round"/>
@@ -3050,15 +3171,14 @@ body.theme-glass .chat-messages {
         </svg>
       </button>
     </div>
-    <!-- 右：发送 -->
-    <button class="chat-icon-btn" onclick="sendUserMessage()">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8">
+    <button class="chat-circle-btn chat-circle-send" onclick="sendUserMessage()">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
         <line x1="22" y1="2" x2="11" y2="13"/>
-        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2" fill="currentColor" stroke="none"/>
       </svg>
     </button>
   </div>
-</div>
+
 
 
 
@@ -3145,6 +3265,8 @@ body.theme-glass .chat-messages {
   </div>
 </div>
 
+</div><!-- /chat-page 修复：补全缺失的关闭标签 -->
+
 <!-- ============ 番外故事子页 ============ -->
 <div id="story-page" class="sub-page">
   <div class="sub-page-header">
@@ -3156,7 +3278,8 @@ body.theme-glass .chat-messages {
     <span class="page-title" style="margin:0;font-size:16px;" id="story-page-title">番外故事</span>
     <span style="width:44px;"></span>
   </div>
-  <div class="sub-page-content">
+<div class="sub-page-content">
+
     <!-- 加载中 -->
     <div class="story-loading" id="story-loading">
       <div class="story-loading-spinner"></div>
@@ -3189,6 +3312,7 @@ body.theme-glass .chat-messages {
     <span style="width:44px;"></span>
   </div>
   <div class="sub-page-content">
+
     <!-- 批量导入导出 -->
     <div class="form-group">
       <label>批量操作</label>
@@ -3225,7 +3349,8 @@ body.theme-glass .chat-messages {
     <span class="page-title" style="margin:0;font-size:16px;">自定义外观 CSS</span>
     <span style="width:44px;"></span>
   </div>
-  <div class="sub-page-content">
+ <div class="sub-page-content">
+
     <div class="css-inject-tabs">
       <button class="css-inject-tab active" onclick="switchCssTab('chat',this)">聊天页面</button>
       <button class="css-inject-tab" onclick="switchCssTab('global',this)">全局</button>
@@ -3281,7 +3406,8 @@ body.theme-glass .chat-messages {
     </div>
   </div>
 
-  <div class="sub-page-content">
+ <div class="sub-page-content">
+
     <div id="record-char-list" style="display:flex;flex-direction:column;gap:10px;"></div>
   </div>
 </div>
@@ -3322,6 +3448,7 @@ body.theme-glass .chat-messages {
     <span style="width:44px;"></span>
   </div>
   <div class="sub-page-content">
+
     <!-- 统计 -->
     <div class="memory-stats" id="memory-stats"></div>
 
@@ -4062,7 +4189,7 @@ function saveChar() {
   renderCharList();
   closeSubPage('char-edit');
   closeSubPage('char-detail');
-  alert('保存成功！');
+  alert('保存成功！'); renderPresetList();
 }
 
 function deleteChar() {
@@ -4262,6 +4389,8 @@ function wbDragEnd() {
 
 // touch拖拽
 function wbTouchStart(e, id) {
+  // 【修复】只从拖拽把手触发，避免阻断点击和开关
+  if (!e.target.closest('.wb-drag-handle')) return;
   wbDragSrcId = id;
   wbTouchItem = document.getElementById('wbcard-' + id);
   wbTouchStartY = e.touches[0].clientY;
@@ -5772,7 +5901,7 @@ let apiPresets = JSON.parse(localStorage.getItem('myAppApiPresets') || '{}');
             localStorage.setItem('myAppApiPresets', JSON.stringify(apiPresets));
             renderPresetList();
             document.getElementById('preset-select').value = name;
-            alert('保存成功！');
+            alert('保存成功！'); renderPresetList();
         }
 
         function deletePreset() {
@@ -5907,12 +6036,21 @@ document.getElementById('toggle-study-history-label').textContent =
 const history = loadChatHistory(currentChatChar.id);
 history.forEach(m => {
   if (m.role === 'user') {
-    appendMessage('sent', m.content);
+    if (m.stickerUrl) {
+      appendStickerMessage('sent', m.stickerUrl);
+    } else {
+      appendMessage('sent', m.content);
+    }
   } else if (m.role === 'assistant') {
-    const processed = processVocabMarkers(m.content);
-    appendMessage('received', processed.html, true);
+    if (m.stickerUrl) {
+      appendStickerMessage('received', m.stickerUrl);
+    } else {
+      const processed = processVocabMarkers(m.content);
+      appendMessage('received', processed.html, true);
+    }
   }
 });
+
 if (history.length > 0) appendSystemMsg('—— 以上是历史记录 ——');
 chatMessages = history; // 作为上下文传给 AI
 
@@ -6039,9 +6177,9 @@ function sendUserSticker(url) {
     ? '[用户发送了一个表情包：' + desc + ']'
     : '[用户发送了一个表情包]';
 
-  chatMessages.push({ role: 'user', content: msgContent, ts: Date.now() });
+   chatMessages.push({ role: 'user', content: msgContent, ts: Date.now(), stickerUrl: url });
   saveMsgToHistory(currentChatChar.id, {
-    role: 'user', content: msgContent, ts: Date.now(), sessionType: chatSessionType
+    role: 'user', content: msgContent, ts: Date.now(), sessionType: chatSessionType, stickerUrl: url
   });
   document.getElementById('chat-trigger-btn').disabled = chatIsReplying;
 }
@@ -7551,32 +7689,120 @@ const THEMES = [
   { id:'default', name:'默认冷灰', desc:'干净克制的冷灰色调', colors:['#F4F4F6','#58585E','#E5E5EA'] },
  { id:'pinkgray', name:'灰粉', desc:'低饱和韩系INS·雾感柔粉', colors:['#F0EEEC','#B8A6A0','#F7F5F4'] },
   { id:'glass', name:'毛玻璃', desc:'磨砂透明质感', colors:['#D6DAE0','rgba(255,255,255,0.55)','#BEC4D0'] },
+  { id:'custom', name:'自定义配色', desc:'自由调节每个颜色变量', colors:['#F4F4F6','#58585E','#FFFFFF'] },
+];
+
+const CUSTOM_THEME_VARS = [
+  { key:'--bg-color',     label:'页面背景',   default:'#F4F4F6' },
+  { key:'--card-bg',      label:'卡片背景',   default:'#FFFFFF' },
+  { key:'--nav-bg',       label:'导航栏',     default:'#FFFFFF' },
+  { key:'--text-main',    label:'主文字',     default:'#333338' },
+  { key:'--text-muted',   label:'次要文字',   default:'#96969E' },
+  { key:'--border-color', label:'边框色',     default:'#E5E5EA' },
+  { key:'--accent',       label:'强调色',     default:'#58585E' },
+  { key:'--accent-light', label:'强调浅色',   default:'#EBEBEF' },
 ];
 
 function initThemePage() {
   const current = DB.get('currentTheme') || 'default';
+  const customVars = DB.get('customThemeVars') || {};
   const el = document.getElementById('theme-list');
   el.innerHTML = THEMES.map(t => {
     const active = t.id === current;
-    return `
-      <div onclick="switchTheme('${t.id}')"
-        style="background:var(--card-bg);border-radius:14px;border:2px solid ${active?'var(--accent)':'var(--border-color)'};
-        padding:16px;cursor:pointer;transition:all 0.2s;">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="display:flex;gap:4px;">
-            ${t.colors.map(c => `<div style="width:24px;height:24px;border-radius:50%;background:${c};border:1px solid rgba(0,0,0,0.08);"></div>`).join('')}
-          </div>
-          <div style="flex:1;">
-            <div style="font-size:15px;font-weight:600;">${t.name}</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${t.desc}</div>
-          </div>
-          ${active ? `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+    const border = active ? 'var(--accent)' : 'var(--border-color)';
+    const customForm = t.id === 'custom' ? `
+      <div id="custom-color-form" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-color);display:${active ? 'block' : 'none'}">
+        ${CUSTOM_THEME_VARS.map(v => {
+          const val = customVars[v.key] || v.default;
+          return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <label style="font-size:12px;color:var(--text-muted);width:64px;flex-shrink:0;">${v.label}</label>
+            <input type="color" value="${val}" data-var="${v.key}"
+              oninput="previewCustomVar(this)"
+              style="width:32px;height:28px;border:none;border-radius:6px;padding:1px 2px;cursor:pointer;flex-shrink:0;">
+            <input type="text" value="${val}" data-var="${v.key}"
+              oninput="syncTextToColor(this)"
+              onchange="previewCustomVar(this)"
+              style="flex:1;padding:5px 8px;border:1px solid var(--border-color);border-radius:6px;font-size:12px;font-family:monospace;outline:none;background:var(--bg-color);">
+          </div>`;
+        }).join('')}
+        <button class="btn" style="width:100%;padding:11px;margin-top:6px;" onclick="saveCustomTheme()">保存配色</button>
+        <button class="btn" style="width:100%;padding:9px;margin-top:6px;background:#F3F4F6;color:var(--text-main);font-size:12px;" onclick="resetCustomTheme()">重置为默认值</button>
+      </div>` : '';
+    return `<div onclick="switchTheme('${t.id}')"
+      style="background:var(--card-bg);border-radius:14px;border:2px solid ${border};padding:16px;cursor:pointer;transition:all 0.2s;margin-bottom:0;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="display:flex;gap:4px;">
+          ${t.colors.map(c => `<div style="width:24px;height:24px;border-radius:50%;background:${c};border:1px solid rgba(0,0,0,0.08);"></div>`).join('')}
         </div>
-      </div>`;
-  }).join('');
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:600;">${t.name}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${t.desc}</div>
+        </div>
+        ${active ? `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+      </div>
+      ${customForm}
+    </div>`;
+  }).join('<div style="height:10px;"></div>');
+}
+
+function previewCustomVar(input) {
+  const key = input.dataset.var;
+  document.documentElement.style.setProperty(key, input.value);
+  const parent = input.parentElement;
+  if (input.type === 'color') {
+    const txt = parent.querySelector('input[type="text"]');
+    if (txt) txt.value = input.value;
+  }
+}
+
+function syncTextToColor(input) {
+  const val = input.value.trim();
+  const key = input.dataset.var;
+  if (/^#[0-9a-fA-F]{3,8}$/.test(val) || val.startsWith('rgb') || val.startsWith('hsl')) {
+    document.documentElement.style.setProperty(key, val);
+    const parent = input.parentElement;
+    const col = parent.querySelector('input[type="color"]');
+    if (col && /^#[0-9a-fA-F]{6}$/.test(val)) col.value = val;
+  }
+}
+
+function saveCustomTheme() {
+  const vars = {};
+  document.querySelectorAll('#custom-color-form input[type="text"]').forEach(inp => {
+    vars[inp.dataset.var] = inp.value.trim();
+  });
+  DB.set('customThemeVars', vars);
+  DB.set('currentTheme', 'custom');
+  applyCustomThemeVars(vars);
+  initThemePage();
+  alert('自定义配色已保存！');
+}
+
+function resetCustomTheme() {
+  const vars = {};
+  CUSTOM_THEME_VARS.forEach(v => { vars[v.key] = v.default; });
+  DB.set('customThemeVars', vars);
+  CUSTOM_THEME_VARS.forEach(v => document.documentElement.style.setProperty(v.key, v.default));
+  initThemePage();
+}
+
+function applyCustomThemeVars(vars) {
+  if (!vars) return;
+  Object.entries(vars).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
 }
 
 function switchTheme(id) {
+  if (id === 'custom') {
+    // 只切换到 custom，展开颜色表单，由用户点保存后生效
+    document.body.className = document.body.className.replace(/theme-\S+/g, '').trim();
+    DB.set('currentTheme', 'custom');
+    const customVars = DB.get('customThemeVars');
+    if (customVars) applyCustomThemeVars(customVars);
+    initThemePage();
+    return;
+  }
+  // 清除自定义变量
+  CUSTOM_THEME_VARS.forEach(v => document.documentElement.style.removeProperty(v.key));
   document.body.className = document.body.className.replace(/theme-\S+/g, '').trim();
   if (id !== 'default') document.body.classList.add('theme-' + id);
   DB.set('currentTheme', id);
@@ -7586,7 +7812,12 @@ function switchTheme(id) {
 // 启动时恢复主题
 (function(){
   const t = DB.get('currentTheme');
-  if (t && t !== 'default') document.body.classList.add('theme-' + t);
+  if (t === 'custom') {
+    const vars = DB.get('customThemeVars');
+    if (vars) applyCustomThemeVars(vars);
+  } else if (t && t !== 'default') {
+    document.body.classList.add('theme-' + t);
+  }
 })();
 // ============ 记忆系统 ============
 
@@ -8960,6 +9191,892 @@ function applyChatBg() {
 
 // 页面加载时恢复背景
 applyChatBg();
-    </script>
+// ============================================================
+//  V2 重构：prompt 架构 + 情境种子 + 后端检测 + 时间注入可控
+// ============================================================
+
+// --- 数据迁移：确保 injectTime 字段存在 ---
+(function migrateInjectTime() {
+  var s = DB.get('appSettings');
+  if (!s.hasOwnProperty('injectTime')) {
+    s.injectTime = true; // 默认开启
+    DB.set('appSettings', s);
+  }
+})();
+
+// --- 词汇足迹存储 ---
+(function initVocabFootprints() {
+  if (!DB.get('vocabFootprints')) DB.set('vocabFootprints', {});
+})();
+
+// ============================================================
+//  1. 重写 buildChatSystemPrompt — 信息驱动，极简骨架
+// ============================================================
+buildChatSystemPrompt = function(wordsAllDone) {
+  var char = currentChatChar;
+  var worldbook = buildWorldbookContext(char.id);
+  var userCtx = getUserProfileContext();
+  var settings = DB.get('appSettings');
+  var profiles = DB.get('userProfiles') || [];
+  var activeProfile = profiles.find(function(p) { return p.id === settings.activeProfileId; });
+  var userName = (activeProfile && activeProfile.nickname) ? activeProfile.nickname : '用户';
+
+  // ===== 时间情境（用户可控）=====
+  var timeContext = '';
+  if (settings.injectTime !== false) {
+    var now = new Date();
+    var weekdays = ['日','一','二','三','四','五','六'];
+    var weekday = weekdays[now.getDay()];
+    var hh = String(now.getHours()).padStart(2, '0');
+    var mm = String(now.getMinutes()).padStart(2, '0');
+
+    var intervalText = '';
+    if (chatMessages.length > 0) {
+      var lastTs = null;
+      for (var i = chatMessages.length - 1; i >= 0; i--) {
+        if (chatMessages[i].ts) { lastTs = chatMessages[i].ts; break; }
+      }
+      if (lastTs) {
+        var diffMin = Math.floor((Date.now() - lastTs) / 60000);
+        if (diffMin < 1) intervalText = '你们刚刚还在聊。';
+        else if (diffMin < 60) intervalText = '距离你们上次聊天过去了' + diffMin + '分钟。';
+        else if (diffMin < 1440) intervalText = '距离你们上次聊天过去了' + Math.floor(diffMin/60) + '小时。';
+        else intervalText = '距离你们上次聊天过去了' + Math.floor(diffMin/1440) + '天。';
+      }
+    }
+    timeContext = '\n\n现在是星期' + weekday + ' ' + hh + ':' + mm + '。\n' + intervalText;
+  }
+
+  // ===== 表情包 =====
+  var cats = DB.get('stickerCategories') || [];
+  var hasStickerDescs = cats.some(function(c) {
+    return (c.items || []).some(function(i) { return typeof i === 'object' && i.desc; });
+  });
+  var stickerLine = hasStickerDescs
+    ? '\n当你想发表情时，在消息里单独一行写 [STICKER]。'
+    : '';
+
+  // ===== 情境种子（从缓存中读取，由 session 开始时生成）=====
+  var seedText = '';
+  if (chatSessionType !== 'casual' && chatVocabList.length > 0) {
+    var seedCache = window._currentScenarioSeeds || [];
+    if (!wordsAllDone && seedCache.length > 0) {
+      seedText = '\n\n[最近发生的事]\n' + seedCache.join('\n');
+    } else if (wordsAllDone) {
+      // 任务完成后不再引导
+      seedText = '';
+    }
+  }
+
+  // ===== 记忆注入（保留原有逻辑）=====
+  var memoryCtx = '';
+  if (currentChatChar) {
+    var lastUserMsg = '';
+    for (var j = chatMessages.length - 1; j >= 0; j--) {
+      if (chatMessages[j].role === 'user') {
+        lastUserMsg = chatMessages[j].content;
+        break;
+      }
+    }
+    memoryCtx = buildMemoryContext(currentChatChar.id, lastUserMsg);
+  }
+
+  // ===== 最终组装 =====
+  return '你不是AI助手。你不是在扮演角色。你就是' + (char.name || '对方')
+    + '，正在用手机和' + userName + '发消息。\n\n'
+    + (char.systemPrompt || '')
+    + worldbook
+    + userCtx
+    + timeContext
+    + memoryCtx
+    + seedText
+    + stickerLine
+    + '\n\n你的每次回复由1条或多条消息组成（\\n\\n分隔）。'
+    + '\n这是手机聊天。一条消息就是一个念头。'
+    + '\n你有自己的情绪和立场。你的反应忠于你这个人，不迁就对方。';
+};
+
+
+// ============================================================
+//  2. 情境种子生成器 — 独立AI调用，输出不含目标词汇的线索
+// ============================================================
+window._currentScenarioSeeds = [];
+
+async function generateScenarioSeeds(char, targetWords) {
+  var preset = getApiPreset();
+  if (!preset || !targetWords || targetWords.length === 0) {
+    window._currentScenarioSeeds = [];
+    return;
+  }
+
+  var wordLines = targetWords.map(function(w) {
+    return '- ' + w.word + ': ' + w.translation;
+  }).join('\n');
+
+  var seedPrompt = '你是一个对话场景设计师。\n\n'
+    + '角色信息：' + (char.name || '某人') + '\n'
+    + (char.systemPrompt ? char.systemPrompt.slice(0, 300) : '') + '\n\n'
+    + '请为以下每个英文词汇，写一句简短的描述，描述该角色最近可能经历或想聊的事。\n'
+    + '要求：\n'
+    + '1. 描述必须与该词汇的语义自然相关\n'
+    + '2. 描述中绝对不能出现该英文词汇本身\n'
+    + '3. 描述要简短（一句话）、开放、适合作为聊天中自然提起的话题\n'
+    + '4. 用中文写描述\n\n'
+    + '词汇：\n' + wordLines + '\n\n'
+    + '每行输出一条描述，不需要标注对应的词汇，不需要任何前缀编号。只输出描述本身。\n'
+    + '如果某个词汇实在无法自然生成情境，跳过它（输出少于词汇数量是允许的）。';
+
+  try {
+    var res = await fetch(preset.url + '/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + preset.key
+      },
+      body: JSON.stringify({
+        model: preset.model || 'gpt-3.5-turbo',
+        messages: [
+          { role: 'system', content: seedPrompt },
+          { role: 'user', content: '请开始生成情境描述。' }
+        ],
+        temperature: 0.8,
+        max_tokens: 500
+      })
+    });
+    var data = await res.json();
+    var raw = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+    var lines = raw.split('\n').map(function(s) { return s.trim(); }).filter(function(s) {
+      return s.length > 0 && s.length < 200;
+    });
+    // 最多取5条
+    window._currentScenarioSeeds = lines.slice(0, 5);
+  } catch(e) {
+    console.warn('情境种子生成失败:', e);
+    window._currentScenarioSeeds = [];
+  }
+}
+
+
+// ============================================================
+//  3. 后端词汇检测 — 取代【】标记
+// ============================================================
+
+// 获取词的基本变形（简化版，覆盖常见情况）
+function getWordForms(word) {
+  if (!word) return [];
+  var w = word.toLowerCase();
+  var forms = [w];
+
+  // 基本后缀变形
+  forms.push(w + 's');
+  forms.push(w + 'es');
+  forms.push(w + 'ed');
+  forms.push(w + 'ing');
+  forms.push(w + 'ly');
+  forms.push(w + 'tion');
+  forms.push(w + 'ment');
+  forms.push(w + 'ness');
+  forms.push(w + 'er');
+  forms.push(w + 'est');
+
+  // e 结尾
+  if (w.endsWith('e')) {
+    forms.push(w.slice(0, -1) + 'ing');
+    forms.push(w + 'd');
+    forms.push(w.slice(0, -1) + 'ation');
+  }
+
+  // 辅音+y 结尾
+  if (w.endsWith('y') && w.length > 2 && !'aeiou'.includes(w[w.length - 2])) {
+    forms.push(w.slice(0, -1) + 'ies');
+    forms.push(w.slice(0, -1) + 'ied');
+    forms.push(w.slice(0, -1) + 'ily');
+    forms.push(w.slice(0, -1) + 'iness');
+  }
+
+  // 双写末尾辅音
+  var lastChar = w[w.length - 1];
+  if (!'aeiouy'.includes(lastChar) && w.length > 2) {
+    forms.push(w + lastChar + 'ed');
+    forms.push(w + lastChar + 'ing');
+    forms.push(w + lastChar + 'er');
+  }
+
+  // 去重
+  return forms.filter(function(f, i, arr) { return arr.indexOf(f) === i; });
+}
+
+// 提取词汇出现的上下文片段
+function extractWordContext(text, matchedForm, radius) {
+  radius = radius || 60;
+  var lower = text.toLowerCase();
+  var idx = lower.indexOf(matchedForm.toLowerCase());
+  if (idx === -1) return text.slice(0, radius * 2);
+  var start = Math.max(0, idx - radius);
+  var end = Math.min(text.length, idx + matchedForm.length + radius);
+  var snippet = text.slice(start, end);
+  if (start > 0) snippet = '…' + snippet;
+  if (end < text.length) snippet = snippet + '…';
+  return snippet;
+}
+
+// 检测AI回复中出现的目标词汇
+function detectVocabInReply(replyText, vocabList) {
+  if (!replyText || !vocabList || vocabList.length === 0) return [];
+  var detected = [];
+  var lower = replyText.toLowerCase();
+
+  vocabList.forEach(function(item) {
+    var forms = getWordForms(item.word);
+    for (var i = 0; i < forms.length; i++) {
+      // 用单词边界检测，避免误匹配（如 "be" 匹配 "because"）
+      var regex = new RegExp('\\b' + forms[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i');
+      if (regex.test(replyText)) {
+        detected.push({
+          wordId: item.id,
+          word: item.word,
+          matchedForm: forms[i],
+          context: extractWordContext(replyText, forms[i]),
+          timestamp: Date.now()
+        });
+        break; // 一个词只记录一次
+      }
+    }
+  });
+
+  return detected;
+}
+
+// 记录词汇足迹
+function recordVocabFootprints(charId, detected) {
+  if (!detected || detected.length === 0) return;
+  var all = DB.get('vocabFootprints') || {};
+  if (!all[charId]) all[charId] = [];
+  detected.forEach(function(d) {
+    all[charId].push({
+      wordId: d.wordId,
+      word: d.word,
+      matchedForm: d.matchedForm,
+      context: d.context,
+      timestamp: d.timestamp,
+      sessionType: chatSessionType
+    });
+  });
+  // 每角色最多保留500条足迹
+  if (all[charId].length > 500) all[charId].splice(0, all[charId].length - 500);
+  DB.set('vocabFootprints', all);
+}
+
+// 高亮AI回复中出现的目标词汇（不依赖AI标记）
+function highlightVocabInReply(replyText, vocabList) {
+  if (!vocabList || vocabList.length === 0) return replyText;
+  var html = replyText;
+
+  // 先清除AI可能自己加的【】标记
+  html = html.replace(/【([^】]+)】/g, '$1');
+
+  vocabList.forEach(function(item) {
+    var forms = getWordForms(item.word);
+    forms.forEach(function(form) {
+      var regex = new RegExp('\\b(' + form.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')\\b', 'gi');
+      html = html.replace(regex, function(match) {
+        return '<span class="vocab-highlight" onclick="showVocabTooltip(event,\'' 
+          + item.word.replace(/'/g, "\\'") + '\',\'' 
+          + (item.translation || '').replace(/'/g, "\\'") + '\')">' 
+          + match + '</span>';
+      });
+    });
+  });
+
+  return html;
+}
+
+
+// ============================================================
+//  4. 重写 streamAIReply — 集成后端检测 + 情境种子
+// ============================================================
+streamAIReply = async function(messages, systemPrompt) {
+  chatIsReplying = true;
+  var preset = getApiPreset();
+  if (!preset) { chatIsReplying = false; return; }
+
+  var s = DB.get('appSettings');
+  var limit = s.chatHistoryLimit || 20;
+  var truncatedMessages = messages.length > limit ? messages.slice(-limit) : messages;
+
+  var typingId = showTypingIndicator();
+
+  try {
+    var res = await fetch(preset.url + '/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + preset.key
+      },
+      body: JSON.stringify({
+        model: preset.model || 'gpt-3.5-turbo',
+        messages: [{ role: 'system', content: systemPrompt }].concat(truncatedMessages),
+        temperature: parseFloat(preset.temp) || 0.85
+      })
+    });
+
+    var data = await res.json();
+    var fullReply = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+
+    removeTypingIndicator(typingId);
+
+    // ===== 后端词汇检测（在完整回复上运行一次）=====
+    var remainingVocab = chatVocabList.filter(function(w) {
+      return !chatVocabDone.find(function(d) { return d.id === w.id; });
+    });
+    var detected = detectVocabInReply(fullReply, remainingVocab);
+    
+    // 记录足迹
+    if (currentChatChar) {
+      recordVocabFootprints(currentChatChar.id, detected);
+    }
+    
+    // 更新已完成列表
+    detected.forEach(function(d) {
+      var vocabItem = chatVocabList.find(function(w) { return w.id === d.wordId; });
+      if (vocabItem && !chatVocabDone.find(function(x) { return x.id === vocabItem.id; })) {
+        chatVocabDone.push(vocabItem);
+      }
+    });
+
+    // ===== 拆分多条消息并逐条显示 =====
+    var parts = fullReply.split('\n\n').map(function(s) { return s.trim(); }).filter(Boolean);
+
+    for (var i = 0; i < parts.length; i++) {
+      var part = parts[i];
+
+      if (part === '[STICKER]') {
+        sendAISticker();
+      } else {
+        // 用后端高亮替代AI标记
+        var highlightedHtml = highlightVocabInReply(part, chatVocabList);
+        appendMessage('received', highlightedHtml, true);
+
+        // 清除【】标记后存入消息历史（纯文本）
+        var cleanContent = part.replace(/【([^】]+)】/g, '$1');
+        chatMessages.push({ role: 'assistant', content: cleanContent, ts: Date.now() });
+        saveMsgToHistory(currentChatChar.id, {
+          role: 'assistant', content: cleanContent, ts: Date.now(), sessionType: chatSessionType
+        });
+
+        if (currentChatChar) {
+          appendToMemoryBuffer(currentChatChar.id, { role: 'assistant', content: cleanContent, ts: Date.now() });
+        }
+      }
+
+      if (i < parts.length - 1) {
+        var nextTypingId = showTypingIndicator();
+        await delay(1500);
+        removeTypingIndicator(nextTypingId);
+      }
+    }
+
+    updateChatHeaderSub();
+
+    if (!chatWordsAllDone && chatVocabDone.length >= chatVocabList.length && chatVocabList.length > 0) {
+      chatWordsAllDone = true;
+      setTimeout(function() { showWordsDoneModal(); }, 800);
+    }
+
+    checkAutoSummarize();
+
+  } catch(e) {
+    removeTypingIndicator(typingId);
+    appendSystemMsg('回复失败，请检查 API 配置');
+  }
+
+  chatIsReplying = false;
+  document.getElementById('chat-trigger-btn').disabled = false;
+};
+
+
+// ============================================================
+//  5. 重写 sendAIOpening — 集成情境种子生成
+// ============================================================
+sendAIOpening = async function() {
+  var preset = getApiPreset();
+  if (!preset) {
+    appendSystemMsg('未配置 API，角色无法回复');
+    return;
+  }
+
+  // 如果有词汇任务，先生成情境种子
+  if (chatSessionType !== 'casual' && chatVocabList.length > 0) {
+    appendSystemMsg('正在准备话题…');
+    await generateScenarioSeeds(currentChatChar, chatVocabList);
+    // 移除提示
+    var msgs = document.getElementById('chat-messages');
+    var lastSys = msgs.querySelector('.msg-system:last-child');
+    if (lastSys && lastSys.textContent.includes('正在准备话题')) lastSys.remove();
+  }
+
+  var systemPrompt = buildChatSystemPrompt(false);
+
+  var openingInstruction = chatSessionType === 'casual'
+    ? '请用符合你角色设定的方式，自然地跟我打个招呼，开启一段轻松的聊天。'
+    : '请用符合你角色的方式打个招呼，自然地开启话题。像真实聊天一样。';
+
+  await streamAIReply([{ role: 'user', content: openingInstruction }], systemPrompt);
+};
+
+
+// ============================================================
+//  6. 重写 openChatPage — 重置种子缓存
+// ============================================================
+var _v2_origOpenChatPage = openChatPage;
+openChatPage = function() {
+  window._currentScenarioSeeds = [];
+  memorySummarizeCounter = 0;
+  _v2_origOpenChatPage();
+  document.getElementById('chat-settings-panel').classList.remove('open');
+  initChatSettingsPanel();
+};
+
+
+// ============================================================
+//  7. 更新设置面板初始化和保存
+// ============================================================
+var _v2_origInitSettings = initChatSettingsPanel;
+initChatSettingsPanel = function() {
+  var s = DB.get('appSettings');
+  document.getElementById('chat-history-limit').value = s.chatHistoryLimit || 20;
+  document.getElementById('chat-auto-summarize').value = s.autoSummarizeInterval || 0;
+  document.getElementById('chat-memory-toggle').checked = s.memoryEnabled !== false;
+  var timeToggle = document.getElementById('chat-time-inject-toggle');
+  if (timeToggle) timeToggle.checked = s.injectTime !== false;
+};
+
+saveChatSettings = function() {
+  var s = DB.get('appSettings');
+  s.chatHistoryLimit = parseInt(document.getElementById('chat-history-limit').value) || 20;
+  s.autoSummarizeInterval = parseInt(document.getElementById('chat-auto-summarize').value) || 0;
+  s.memoryEnabled = document.getElementById('chat-memory-toggle').checked;
+  var timeToggle = document.getElementById('chat-time-inject-toggle');
+  if (timeToggle) s.injectTime = timeToggle.checked;
+  DB.set('appSettings', s);
+};
+
+
+// ============================================================
+//  8. 重写 sendUserMessage — 保持记忆缓冲区逻辑
+// ============================================================
+sendUserMessage = function() {
+  var input = document.getElementById('chat-input');
+  var text = input.value.trim();
+  if (!text || chatIsReplying) return;
+
+  appendMessage('sent', text);
+  chatMessages.push({ role: 'user', content: text, ts: Date.now() });
+  saveMsgToHistory(currentChatChar.id, {
+    role: 'user', content: text, ts: Date.now(), sessionType: chatSessionType
+  });
+
+  if (currentChatChar) {
+    appendToMemoryBuffer(currentChatChar.id, { role: 'user', content: text, ts: Date.now() });
+  }
+
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('sticker-panel').classList.remove('open');
+  document.getElementById('chat-trigger-btn').disabled = false;
+};
+
+
+// ============================================================
+//  9. 重写 sendUserSticker — 保持记忆缓冲区逻辑
+// ============================================================
+sendUserSticker = function(url) {
+  if (!url) return;
+  appendStickerMessage('sent', url);
+  document.getElementById('sticker-panel').classList.remove('open');
+
+  var cats = DB.get('stickerCategories') || [];
+  var desc = '';
+  for (var ci = 0; ci < cats.length; ci++) {
+    for (var ii = 0; ii < (cats[ci].items || []).length; ii++) {
+      var item = cats[ci].items[ii];
+      var itemUrl = typeof item === 'string' ? item : (item.url || '');
+      if (itemUrl === url) {
+        desc = typeof item === 'object' ? (item.desc || '') : '';
+        break;
+      }
+    }
+    if (desc) break;
+  }
+
+  var msgContent = desc ? '[用户发送了一个表情包：' + desc + ']' : '[用户发送了一个表情包]';
+
+  chatMessages.push({ role: 'user', content: msgContent, ts: Date.now() });
+  saveMsgToHistory(currentChatChar.id, {
+    role: 'user', content: msgContent, ts: Date.now(), sessionType: chatSessionType
+  });
+
+  if (currentChatChar) {
+    appendToMemoryBuffer(currentChatChar.id, { role: 'user', content: msgContent, ts: Date.now() });
+  }
+
+  document.getElementById('chat-trigger-btn').disabled = chatIsReplying;
+};
+
+
+// ============================================================
+//  10. chatMoreAction 补丁 — memory-summarize + chat-settings
+// ============================================================
+var _v2_origChatMoreAction = chatMoreAction;
+chatMoreAction = function(action) {
+  closeChatMore();
+
+  if (action === 'chat-bg') {
+    initChatBgSettings();
+    document.getElementById('chat-bg-modal').classList.add('open');
+    return;
+  }
+  if (action === 'memory-summarize') {
+    manualSummarize();
+    return;
+  }
+  if (action === 'chat-settings') {
+    initChatSettingsPanel();
+    toggleChatSettingsPanel();
+    return;
+  }
+  if (action === 'vocab-list') {
+    var content = document.getElementById('vocab-list-content');
+    content.innerHTML = chatVocabList.map(function(w) {
+      var done = chatVocabDone.find(function(x) { return x.id === w.id; });
+      return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-color);">'
+        + '<div style="width:8px;height:8px;border-radius:50%;background:' + (done ? '#34D399' : '#E5E7EB') + ';flex-shrink:0;"></div>'
+        + '<div><span style="font-weight:600;">' + w.word + '</span>'
+        + '<span style="color:var(--text-muted);font-size:13px;margin-left:6px;">' + w.translation + '</span></div></div>';
+    }).join('');
+    document.getElementById('vocab-list-modal').classList.add('open');
+  } else if (action === 'css-inject') {
+    openSubPage('css-inject');
+    initCssInjectPage();
+  } else if (action === 'clear') {
+    if (!confirm('确定清空本次聊天记录？')) return;
+    chatMessages = [];
+    chatVocabDone = [];
+    chatWordsAllDone = false;
+    document.getElementById('chat-messages').innerHTML = '';
+    if (currentChatChar) localStorage.removeItem(getChatHistoryKey(currentChatChar.id));
+    updateChatHeaderSub();
+  } else if (action === 'save') {
+    saveChatRecord();
+    alert('已保存到记录！');
+  } else if (action === 'toggle-study-history') {
+    var settings = DB.get('appSettings');
+    settings.showStudyMsgsInHistory = !settings.showStudyMsgsInHistory;
+    DB.set('appSettings', settings);
+    var label = document.getElementById('toggle-study-history-label');
+    label.textContent = settings.showStudyMsgsInHistory ? '隐藏学习时的聊天' : '显示学习时的聊天';
+    document.getElementById('chat-messages').innerHTML = '';
+    var history = loadChatHistory(currentChatChar.id);
+    history.forEach(function(m) {
+      if (m.role === 'user') appendMessage('sent', m.content);
+      else appendMessage('received', highlightVocabInReply(m.content, chatVocabList), true);
+    });
+    if (history.length > 0) appendSystemMsg('—— 以上是历史记录 ——');
+    chatMessages = history;
+  }
+};
+
+console.log('[V2] Prompt重构 + 情境种子 + 后端检测 已加载');
+
+// ============ 数据导入导出 ============
+function exportAllData() {
+  try {
+    const chars = DB.get('characters') || [];
+    const chatHistories = {};
+    chars.forEach(c => {
+      const raw = localStorage.getItem('chatHistory_' + c.id);
+      if (raw) try { chatHistories[c.id] = JSON.parse(raw); } catch(e) {}
+    });
+
+    const payload = {
+      _version: 2,
+      _exportedAt: Date.now(),
+      _exportedDate: new Date().toLocaleString('zh-CN'),
+      wordbooks:        DB.get('wordbooks'),
+      wordProgress:     DB.get('wordProgress'),
+      characters:       DB.get('characters'),
+      worldBookEntries: DB.get('worldBookEntries'),
+      companionRecords: DB.get('companionRecords'),
+      checkins:         DB.get('checkins'),
+      diaries:          DB.get('diaries'),
+      stickerCategories:DB.get('stickerCategories'),
+      cssPresets:       DB.get('cssPresets'),
+      appSettings:      DB.get('appSettings'),
+      userProfiles:     DB.get('userProfiles'),
+      storyPresets:     DB.get('storyPresets'),
+      charMemories:     DB.get('charMemories'),
+      memoryBuffers:    DB.get('memoryBuffers'),
+      customThemeVars:  DB.get('customThemeVars'),
+      currentTheme:     DB.get('currentTheme'),
+      vocabFootprints:  DB.get('vocabFootprints'),
+      apiPresets:       JSON.parse(localStorage.getItem('myAppApiPresets') || '{}'),
+      chatHistories,
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'rainy_backup_' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    alert('导出失败：' + e.message);
+  }
+}
+
+function importAllData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data._version) return alert('文件格式不正确（缺少 _version 字段），请确认是 Rainy 的备份文件');
+
+      const dateStr = data._exportedDate || new Date(data._exportedAt || 0).toLocaleString('zh-CN');
+      if (!confirm('⚠️ 导入会覆盖当前全部数据！\n\n备份时间：' + dateStr + '\n\n确定继续？')) return;
+
+      const dbKeys = ['wordbooks','wordProgress','characters','worldBookEntries',
+        'companionRecords','checkins','diaries','stickerCategories','cssPresets',
+        'appSettings','userProfiles','storyPresets','charMemories','memoryBuffers',
+        'customThemeVars','currentTheme','vocabFootprints'];
+      dbKeys.forEach(k => { if (data[k] !== undefined) DB.set(k, data[k]); });
+
+      if (data.apiPresets) localStorage.setItem('myAppApiPresets', JSON.stringify(data.apiPresets));
+      if (data.chatHistories) {
+        Object.keys(data.chatHistories).forEach(cid => {
+          try { localStorage.setItem('chatHistory_' + cid, JSON.stringify(data.chatHistories[cid])); } catch(ex) {}
+        });
+      }
+
+      alert('✅ 导入成功！页面即将刷新');
+      setTimeout(() => location.reload(), 500);
+    } catch(ex) {
+      alert('导入失败：' + ex.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function showStorageUsage() {
+  try {
+    let total = 0;
+    for (let k in localStorage) {
+      if (Object.prototype.hasOwnProperty.call(localStorage, k)) {
+        total += ((localStorage.getItem(k) || '').length + k.length) * 2;
+      }
+    }
+    const kb = (total / 1024).toFixed(1);
+    const mb = (total / 1048576).toFixed(2);
+    const el = document.getElementById('storage-usage');
+    if (el) el.textContent = kb + ' KB（约 ' + mb + ' MB）';
+  } catch(e) {}
+}
+
+// 打开数据管理页时显示用量
+const _dmBase = openSubPage;
+openSubPage = function(pageId) {
+  _dmBase(pageId);
+  if (pageId === 'data-manager') setTimeout(showStorageUsage, 80);
+};
+
+
+function speakWord(word) {
+  if (!word || word === '---') return;
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(word.trim());
+  const isJapanese = /[぀-ヿ㐀-䶿一-鿿]/.test(word);
+  utter.lang = isJapanese ? 'ja-JP' : 'en-US';
+  utter.rate = 0.82;
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(v => v.lang.startsWith(isJapanese ? 'ja' : 'en'));
+  if (preferred) utter.voice = preferred;
+  window.speechSynthesis.speak(utter);
+}
+
+
+    
+/* --- 补丁逻辑：番茄钟、专注模式、拼写 --- */
+let pomoTimer = null; let pomoSeconds = 25 * 60;
+function togglePomo() {
+    const el = document.getElementById('pomo-float');
+    if (el.style.display === 'flex') { clearInterval(pomoTimer); el.style.display = 'none'; }
+    else { el.style.display = 'flex'; startPomo(); }
+}
+function startPomo() {
+    clearInterval(pomoTimer); pomoSeconds = 25 * 60; updatePomoUI();
+    pomoTimer = setInterval(() => { pomoSeconds--; updatePomoUI(); if (pomoSeconds <= 0) { clearInterval(pomoTimer); alert('时间到！'); } }, 1000);
+}
+function updatePomoUI() {
+    const m = Math.floor(pomoSeconds / 60); const s = pomoSeconds % 60;
+    document.getElementById('pomo-time').textContent = `${m}:${s < 10 ? '0' + s : s}`;
+}
+
+function toggleFocusMode() {
+    const s = DB.get('appSettings'); s.focusMode = !s.focusMode; DB.set('appSettings', s); updateFocusUI();
+}
+function updateFocusUI() {
+    const s = DB.get('appSettings') || {}; const btn = document.getElementById('focus-toggle-btn');
+    if (btn) { btn.textContent = s.focusMode ? '关闭监测' : '开启监测'; btn.style.background = s.focusMode ? 'var(--danger-light)' : 'var(--accent)'; }
+}
+document.addEventListener('visibilitychange', () => {
+    const s = DB.get('appSettings'); if (document.hidden && s && s.focusMode) { 
+        s.lastDistractionCount = (s.lastDistractionCount || 0) + 1; DB.set('appSettings', s); 
+    }
+});
+
+function updateSpellingSetting(val) { const s = DB.get('appSettings'); s.spellingEnabled = (val === 'true'); DB.set('appSettings', s); }
+function checkSpelling(val) {
+    const cardEl = document.getElementById('study-card'); const wordData = JSON.parse(cardEl.dataset.word);
+    const target = wordData.word.toLowerCase(); const input = val.toLowerCase();
+    const el = document.getElementById('spelling-input');
+    if (target.startsWith(input)) {
+        el.className = 'spelling-input correct';
+        if (input === target) { setTimeout(() => { document.getElementById('study-btns-know').style.display = 'flex'; el.blur(); }, 200); }
+    } else { el.className = 'spelling-input wrong'; if (window.navigator.vibrate) window.navigator.vibrate(100); }
+}
+
+function syncScreenTime() {
+    try { const data = JSON.parse(document.getElementById('screen-time-input').value);
+    const s = DB.get('appSettings'); s.screenTimeData = data; DB.set('appSettings', s); alert('同步成功！'); } catch (e) { alert('格式错误'); }
+}
+
+// 拦截原有的 openSubPage 增加初始化逻辑
+const _baseOpen = openSubPage;
+openSubPage = function(id) {
+    _baseOpen(id);
+    if (id === 'focus-settings') {
+        const s = DB.get('appSettings');
+        document.getElementById('setting-spelling').value = s.spellingEnabled ? 'true' : 'false';
+        updateFocusUI();
+    }
+};
+
+// 拦截原有的 tapStudyCard 增加拼写触发
+const _baseTap = tapStudyCard;
+tapStudyCard = function() {
+    const cardEl = document.getElementById('study-card');
+    if (cardEl.dataset.revealed === 'true') return;
+    _baseTap();
+    const s = DB.get('appSettings');
+    if (s.spellingEnabled) {
+        document.getElementById('study-btns-know').style.display = 'none';
+        document.getElementById('spelling-area').style.display = 'block';
+        document.getElementById('spelling-input').value = '';
+        document.getElementById('spelling-input').focus();
+        const wordData = JSON.parse(cardEl.dataset.word);
+        document.getElementById('spelling-placeholder').textContent = '_ '.repeat(wordData.word.length);
+    }
+};
+
+
+/* --- V2 补丁逻辑 --- */
+let pomoDuration = 25; 
+function updatePomoDuration(val) { pomoDuration = parseInt(val); document.getElementById('pomo-time').textContent = pomoDuration + ":00"; }
+
+// 修改后的番茄钟启动逻辑
+function startPomo() {
+    clearInterval(pomoTimer); 
+    pomoSeconds = pomoDuration * 60; 
+    updatePomoUI();
+    pomoTimer = setInterval(() => { 
+        pomoSeconds--; updatePomoUI(); 
+        if (pomoSeconds <= 0) { 
+            clearInterval(pomoTimer); 
+            showDistractionToast("恭喜完成一个番茄钟！");
+            if (window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]);
+        } 
+    }, 1000);
+}
+
+// 分心提示框
+function showDistractionToast(msg) {
+    const toast = document.createElement('div');
+    toast.className = 'distraction-toast';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// 增强的分心监测
+document.addEventListener('visibilitychange', () => {
+    const s = DB.get('appSettings');
+    if (document.hidden && s && s.focusMode) {
+        s.lastDistractionCount = (s.lastDistractionCount || 0) + 1;
+        DB.set('appSettings', s);
+    } else if (!document.hidden && s && s.focusMode && s.lastDistractionCount > 0) {
+        showDistractionToast(`刚才分心了！当前累计分心 ${s.lastDistractionCount} 次`);
+    }
+});
+
+// AI Prompt 补丁：让 AI 发现你的分心
+const _origBuildPrompt = buildChatSystemPrompt;
+buildChatSystemPrompt = function(done) {
+    let prompt = _origBuildPrompt(done);
+    const s = DB.get('appSettings');
+    if (s.focusMode && s.lastDistractionCount > 0) {
+        prompt += `\n[专注提醒] 用户在刚才的学习中分心了 ${s.lastDistractionCount} 次。请在对话中以你的性格对此进行评价（可以毒舌、担忧或鼓励）。`;
+    }
+    if (s.screenTimeData) {
+        prompt += `\n[屏幕时间参考] 用户今天的 App 使用情况：${JSON.stringify(s.screenTimeData)}。如果发现娱乐时间过长，请提醒用户。`;
+    }
+    return prompt;
+};
+</script>
+
+<div id="focus-settings" class="sub-page">
+    <div class="sub-page-header">
+        <span class="back-btn" onclick="closeSubPage('focus-settings')">返回</span>
+        <span class="page-title">专注与拼写</span>
+        <span style="width:44px;"></span>
+    </div>
+    <div class="sub-page-content">
+        <!-- 番茄钟只留在这里 ↓ -->
+        <div class="form-group">
+            <label>番茄钟时长</label>
+            <select id="pomo-duration-set" onchange="updatePomoDuration(this.value)">
+                <option value="15">15 分钟 (快速专注)</option>
+                <option value="25" selected>25 分钟 (标准)</option>
+                <option value="45">45 分钟 (深度学习)</option>
+                <option value="60">60 分钟 (极限挑战)</option>
+            </select>
+        </div>
+        <!-- 番茄钟只留在这里 ↑ -->
+
+        <div class="form-group">
+            <label>分心监测 (手动开启)</label>
+            <p class="note">开启后，切出 App 会被记录。</p>
+            <button id="focus-toggle-btn" class="btn" style="width:100%;" onclick="toggleFocusMode()">开启监测</button>
+        </div>
+        <div class="form-group">
+            <label>拼写模式</label>
+            <select id="setting-spelling" onchange="updateSpellingSetting(this.value)">
+                <option value="true">开启</option>
+                <option value="false">关闭</option>
+            </select>
+        </div>
+    </div>
+</div>
+<div id="screen-time-sync" class="sub-page">
+    <div class="sub-page-header"><span class="back-btn" onclick="closeSubPage('screen-time-sync')">返回</span><span class="page-title">屏幕时间同步</span><span style="width:44px;"></span></div>
+  <div class="sub-page-content">
+
+        <div class="form-group"><label>同步 JSON 数据</label><textarea id="screen-time-input" rows="5" style="width:100%;border:1px solid var(--border-color);border-radius:10px;padding:10px;"></textarea></div>
+        <button class="btn" style="width:100%;" onclick="syncScreenTime()">立即同步</button>
+    </div>
+</div>
 </body>
 </html>
